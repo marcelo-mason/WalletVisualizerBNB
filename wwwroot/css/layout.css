@@ -1,0 +1,11 @@
+circle.node {
+  cursor: pointer;
+  stroke: #000;
+  stroke-width: .5px;
+}
+
+line.link {
+  fill: none;
+  stroke: rgb(83, 83, 83);
+  stroke-width: 1.5px;
+}

@@ -1,0 +1,6 @@
+node_modules/
+dist/
+
+storage.json
+.env
+yarn.lock
