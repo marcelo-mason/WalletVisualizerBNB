@@ -36,20 +36,52 @@ $.get('api/txs/0x28d804Bf2212E220BC2B7B6252993Db8286dF07f', data => {
   update()
 })
 
+// --------------------------
+
 var force = d3.layout
   .force()
   .size([w, h - 160])
   .on('tick', tick)
   .gravity(0.1)
-  .charge(-120)
-  .linkDistance(30)
+  .charge(-200)
+  .linkDistance(50)
+
+var drag = force
+  .drag()
+  .origin(d => d)
+  .on('dragstart', () => {
+    d3.event.sourceEvent.stopPropagation()
+  })
+  .on('drag', d => {
+    d3
+      .select(this)
+      .attr('x', (d.x = d3.event.x))
+      .attr('y', (d.y = d3.event.y))
+  })
+
+var zoom = d3.behavior
+  .zoom()
+  .translate([0, 0])
+  .scale(1)
+  .scaleExtent([-8, 8])
+  .on('zoom', () => {
+    console.log('here', d3.event.translate.toString(), d3.event.scale)
+    vis.attr(
+      'transform',
+      'translate(' + d3.event.translate + ')scale(' + d3.event.scale + ')'
+    )
+  })
 
 var vis = d3
   .select('body')
   .append('svg:svg')
   .attr('width', w)
   .attr('height', h)
+  .attr('pointer-event', 'all')
+  .call(zoom)
   .append('svg:g')
+
+// ----------------------------
 
 function update() {
   var nodes = flatten(root)
@@ -61,47 +93,39 @@ function update() {
     .links(links)
     .start()
 
-  // Update the links…
-  link = vis.selectAll('line.link').data(links, d => d.target.id)
+  link = vis.selectAll('.link').data(links, d => d.target.id)
 
-  // Exit any old links.
   link.exit().remove()
 
-  // Enter any new links.
   link
     .enter()
-    .insert('line', '.node')
+    .insert('line')
     .attr('class', 'link')
     .attr('x1', d => d.source.x)
     .attr('y1', d => d.source.y)
     .attr('x2', d => d.target.x)
     .attr('y2', d => d.target.y)
 
-  // Update the nodes…
-  node = vis
-    .selectAll('circle.node')
-    .data(nodes, d => d.id)
-    .style('fill', color)
+  node = vis.selectAll('.node').data(nodes, d => d.id)
 
-  // Exit any old nodes.
   node.exit().remove()
 
-  // Enter any new nodes.
   node
     .enter()
-    .append('svg:circle')
+    .append('g')
     .attr('class', 'node')
-    .attr('cx', d => d.x)
-    .attr('cy', d => d.y)
-    .attr('r', d => d.size)
-    .style('fill', color)
-    .on('click', click)
-    .call(force.drag)
+    .call(drag)
 
   node
-    .append('svg:text')
-    .attr('dy', '1em')
-    .attr('font-size', d => d.size + 'px')
+    .append('circle')
+    .attr('class', 'node-circle')
+    .attr('r', d => d.size)
+    .style('fill', color)
+
+  node
+    .append('text')
+    .attr('x', 12)
+    .attr('y', '.35em')
     .text(d => new Intl.NumberFormat().format(d.data.amount))
 }
 
@@ -112,7 +136,7 @@ function tick() {
     .attr('x2', d => d.target.x)
     .attr('y2', d => d.target.y)
 
-  node.attr('cx', d => d.x).attr('cy', d => d.y)
+  node.attr('transform', d => 'translate(' + d.x + ',' + d.y + ')')
 }
 
 // Toggle children on click.

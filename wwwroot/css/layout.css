@@ -7,11 +7,11 @@ body {
   fill: #000;
 }
 
-.node:hover {
+.node:hover circle{
   fill: #3182bd;
 }
 
-.node {
+.node circle {
   cursor: pointer;
   stroke: #3182bd;
   stroke-width: 1.5px;
