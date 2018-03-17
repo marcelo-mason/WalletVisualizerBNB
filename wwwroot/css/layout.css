@@ -1,11 +1,24 @@
-circle.node {
-  cursor: pointer;
-  stroke: #000;
-  stroke-width: .5px;
+body {
+  background: #2d2d2d;
 }
 
-line.link {
+.node text {
+  font: 10px sans-serif;
+  fill: #000;
+}
+
+.node:hover {
+  fill: #3182bd;
+}
+
+.node {
+  cursor: pointer;
+  stroke: #3182bd;
+  stroke-width: 1.5px;
+}
+
+.link {
   fill: none;
-  stroke: rgb(83, 83, 83);
+  stroke: #9ecae1;
   stroke-width: 1.5px;
 }
