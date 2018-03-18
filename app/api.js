@@ -1,32 +1,38 @@
-const eth = require('./eth')
+const data = require('./data')
 const _ = require('lodash')
 const async = require('awaitable-async')
 const api = module.exports
 
 api.txs = async (req, res) => {
   const address = req.params.address
-  const parents = await getChildrenTxs(address, 'root')
+  const { balance, txs } = await getData(address)
   let children = []
 
-  await async.eachSeries(parents, async tx => {
+  await async.eachSeries(txs, async tx => {
     const exists = _.find(children, { tx: tx.tx })
     if (!exists) {
       tx.layer = 1
       children.push(tx)
     }
-    const txs = await getChildrenTxs(tx.address, tx.tx, tx.block)
-    txs.forEach(x => {
+
+    let d = await getData(tx.address, tx)
+    tx.balance = d.balance
+    d.txs.forEach(x => {
       const exists = _.find(children, { tx: x.tx })
       if (!exists) {
+        x.balance = x.amount
         x.layer = 2
         children.push(x)
       }
     })
-    await async.eachSeries(txs, async tx2 => {
-      const txs2 = await getChildrenTxs(tx2.address, tx2.tx, tx2.block)
-      txs2.forEach(x => {
+
+    await async.eachSeries(d.txs, async tx => {
+      let d = await getData(tx.address, tx)
+      tx.balance = d.balance
+      d.txs.forEach(x => {
         const exists = _.find(children, { tx: x.tx })
         if (!exists) {
+          x.balance = x.amount
           x.layer = 3
           children.push(x)
         }
@@ -34,22 +40,28 @@ api.txs = async (req, res) => {
     })
   })
 
+  console.log('* Data collected')
+
   children.unshift({
     tx: 'root',
+    balance,
     parent: null
   })
+
   res.send(children)
 }
 
-async function getChildrenTxs(address, parent, fromBlock) {
-  let txs = await eth.txs(address, fromBlock)
-  txs = txs.filter(tx => tx.direction === 'OUT')
-  if (fromBlock) {
-    txs = txs.filter(x => x.block >= fromBlock)
-  }
+async function getData(address, parent) {
+  const parentTx = parent ? parent.tx : 'root'
+  const parentBlock = parent ? parent.block : null
 
+  let d = await data.balanceAndTxs(address, parentBlock)
+  let txs = d.txs
+  if (parent) {
+    txs = txs.filter(x => x.block >= parentBlock)
+  }
   txs.forEach(tx => {
-    tx.parent = parent
+    tx.parent = parentTx
   })
-  return txs
+  return { balance: d.balance, txs }
 }

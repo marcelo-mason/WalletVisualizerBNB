@@ -1,0 +1,16 @@
+patch-package
+--- a/node_modules/web3-core-method/src/index.js
++++ b/node_modules/web3-core-method/src/index.js
+@@ -368,12 +368,6 @@ Method.prototype._confirmTransaction = function (defer, result, payload) {
+             // time out the transaction if not mined after 50 blocks
+             .catch(function () {
+                 timeoutCount++;
+-
+-                if (timeoutCount - 1 >= TIMEOUTBLOCK) {
+-                    sub.unsubscribe();
+-                    promiseResolved = true;
+-                    return utils._fireError(new Error('Transaction was not mined within 50 blocks, please make sure your transaction was properly send. Be aware that it might still be mined!'), defer.eventEmitter, defer.reject);
+-                }
+             });
+ 
+ 

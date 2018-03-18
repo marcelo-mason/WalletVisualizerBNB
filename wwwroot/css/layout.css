@@ -2,23 +2,33 @@ body {
   background: #2d2d2d;
 }
 
-.node text {
-  font: 10px sans-serif;
-  fill: #000;
-}
-
-.node:hover circle{
-  fill: #3182bd;
+.node circle:hover {
+  fill: #3182bd !important;
 }
 
 .node circle {
   cursor: pointer;
-  stroke: #3182bd;
-  stroke-width: 1.5px;
+  stroke: #2d2d2d;
+  stroke-width: 1px;
+}
+
+.hid {
+  display: none;
+}
+
+.info {
+  fill: #1d1d1d;
+}
+
+.node text {
+  cursor: pointer;
+  pointer-events: none;
+  font: 10px sans-serif;
+  fill: #fff;
 }
 
 .link {
   fill: none;
-  stroke: #9ecae1;
-  stroke-width: 1.5px;
+  stroke: #4d4d4d;
+  stroke-width: 1px;
 }

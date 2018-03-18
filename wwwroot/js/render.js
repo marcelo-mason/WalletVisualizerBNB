@@ -1,3 +1,8 @@
+let tokenSymbol = 'ZIL'
+let targetAddress = '0x28d804Bf2212E220BC2B7B6252993Db8286dF07f'
+
+/// ====================================
+
 const d3 = d3 || {}
 const w = $(document).width()
 const h = $(document).height()
@@ -18,21 +23,20 @@ function flatten(root) {
     if (node.children) {
       node.children.forEach(recurse)
     }
-    node.size = node.data.size || 10
+    node.size = Math.sqrt(node.data.balance) / 100 || 10
     nodes.push(node)
-    return node.size
   }
 
-  root.size = recurse(root)
+  recurse(root)
+  root.size = 30
   return nodes
 }
 
-$.get('api/txs/0x28d804Bf2212E220BC2B7B6252993Db8286dF07f', data => {
+$.get('api/txs/' + targetAddress, data => {
   root = stratify(data)
   root.fixed = true
   root.x = w / 2
   root.y = h / 2 - 80
-
   update()
 })
 
@@ -44,7 +48,8 @@ var force = d3.layout
   .on('tick', tick)
   .gravity(0.1)
   .charge(-200)
-  .linkDistance(50)
+  .charge(d => -d.size * 50)
+  .linkDistance(d => 25 + d.target.size / 2 + d.source.size / 2)
 
 var drag = force
   .drag()
@@ -114,33 +119,65 @@ function update() {
     .enter()
     .append('g')
     .attr('class', 'node')
+    .on('click', click)
+    .on('mouseover', function() {
+      d3
+        .select(this)
+        .selectAll('.hid')
+        .style('display', 'inherit')
+    })
+    .on('mouseout', function(d) {
+      d3
+        .select(this)
+        .selectAll('.hid')
+        .style('display', 'none')
+    })
     .call(drag)
+
+  vis.selectAll('circle').remove()
 
   node
     .append('circle')
-    .attr('class', 'node-circle')
     .attr('r', d => d.size)
     .style('fill', color)
 
+  vis.selectAll('text').remove()
+
+  node
+    .append('rect')
+    .attr('rx', 6)
+    .attr('ry', 6)
+    .attr('x', 20)
+    .attr('y', -10)
+    .attr('width', 80)
+    .attr('height', 20)
+    .attr('class', 'info hid')
+
   node
     .append('text')
-    .attr('x', 12)
+    .attr('class', 'text hid')
     .attr('y', '.35em')
-    .text(d => new Intl.NumberFormat().format(d.data.amount))
+    .attr('x', 25)
+    .text(d => {
+      if (d.data.amount) {
+        return `${new Intl.NumberFormat().format(d.data.amount)} ${tokenSymbol}`
+      }
+    })
 }
 
 function tick() {
   link
-    .attr('x1', d => d.source.x)
-    .attr('y1', d => d.source.y)
-    .attr('x2', d => d.target.x)
-    .attr('y2', d => d.target.y)
+    .attr('x1', d => d.source.x || 0)
+    .attr('y1', d => d.source.y || 0)
+    .attr('x2', d => d.target.x || 0)
+    .attr('y2', d => d.target.y || 0)
 
   node.attr('transform', d => 'translate(' + d.x + ',' + d.y + ')')
 }
 
 // Toggle children on click.
 function click(d) {
+  return
   if (!d.parent) {
     return
   }

@@ -1,8 +1,8 @@
-const Contract = require('./token/contract')
+const Contract = require('./contract')
 const BigNumber = require('bignumber.js')
 const db = require('./db')
 
-class Eth {
+class Data {
   constructor() {
     this.decimals = 12
     this.contract = new Contract(
@@ -13,33 +13,41 @@ class Eth {
   /**
    * Returns all eth transactions
    */
-  async txs(address) {
+  async balanceAndTxs(address) {
     const cached = await db.txs.get(address)
     if (cached) {
       return cached
     }
 
-    const txs = await this.contract.txs(address)
-    const cleaned = txs.map(tx => {
+    let balance
+    let rawTxs
+    try {
+      balance = await this.contract.balance(address)
+      rawTxs = await this.contract.txs(address)
+    } catch (err) {
+      balance = await this.contract.balance(address)
+      rawTxs = await this.contract.txs(address)
+    }
+
+    balance = new BigNumber(balance).dividedBy(10 ** this.decimals).toFixed(0)
+
+    const txs = rawTxs.map(tx => {
       const vals = tx.returnValues
-      const isOut = vals._from.toLowerCase() === address.toLowerCase()
       const amount = new BigNumber(vals._value)
         .dividedBy(10 ** this.decimals)
         .toFixed(0)
       return {
         tx: tx.transactionHash,
-        direction: isOut ? 'OUT' : 'IN',
-        address: isOut ? vals._to : vals._from,
+        address: vals._to,
         to: vals._to,
         from: vals._from,
         amount,
-        size: Math.sqrt(amount),
         block: tx.blockNumber
       }
     })
-    db.txs.create(address, cleaned)
-    return cleaned
+    await db.txs.create(address, balance, txs)
+    return { balance, txs }
   }
 }
 
-module.exports = new Eth()
+module.exports = new Data()

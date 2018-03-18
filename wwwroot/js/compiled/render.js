@@ -1,5 +1,10 @@
 'use strict';
 
+var tokenSymbol = 'ZIL';
+var targetAddress = '0x28d804Bf2212E220BC2B7B6252993Db8286dF07f';
+
+/// ====================================
+
 var d3 = d3 || {};
 var w = $(document).width();
 var h = $(document).height();
@@ -21,27 +26,30 @@ function flatten(root) {
     if (node.children) {
       node.children.forEach(recurse);
     }
-    node.size = node.data.size || 10;
+    node.size = Math.sqrt(node.data.balance) / 100 || 10;
     nodes.push(node);
-    return node.size;
   }
 
-  root.size = recurse(root);
+  recurse(root);
+  root.size = 30;
   return nodes;
 }
 
-$.get('api/txs/0x28d804Bf2212E220BC2B7B6252993Db8286dF07f', function (data) {
+$.get('api/txs/' + targetAddress, function (data) {
   root = stratify(data);
   root.fixed = true;
   root.x = w / 2;
   root.y = h / 2 - 80;
-
   update();
 });
 
 // --------------------------
 
-var force = d3.layout.force().size([w, h - 160]).on('tick', tick).gravity(0.1).charge(-200).linkDistance(50);
+var force = d3.layout.force().size([w, h - 160]).on('tick', tick).gravity(0.1).charge(-200).charge(function (d) {
+  return -d.size * 50;
+}).linkDistance(function (d) {
+  return 25 + d.target.size / 2 + d.source.size / 2;
+});
 
 var drag = force.drag().origin(function (d) {
   return d;
@@ -89,26 +97,38 @@ function update() {
 
   node.exit().remove();
 
-  node.enter().append('g').attr('class', 'node').call(drag);
+  node.enter().append('g').attr('class', 'node').on('click', click).on('mouseover', function () {
+    d3.select(this).selectAll('.hid').style('display', 'inherit');
+  }).on('mouseout', function (d) {
+    d3.select(this).selectAll('.hid').style('display', 'none');
+  }).call(drag);
 
-  node.append('circle').attr('class', 'node-circle').attr('r', function (d) {
+  vis.selectAll('circle').remove();
+
+  node.append('circle').attr('r', function (d) {
     return d.size;
   }).style('fill', color);
 
-  node.append('text').attr('x', 12).attr('y', '.35em').text(function (d) {
-    return new Intl.NumberFormat().format(d.data.amount);
+  vis.selectAll('text').remove();
+
+  node.append('rect').attr('rx', 6).attr('ry', 6).attr('x', 20).attr('y', -10).attr('width', 80).attr('height', 20).attr('class', 'info hid');
+
+  node.append('text').attr('class', 'text hid').attr('y', '.35em').attr('x', 25).text(function (d) {
+    if (d.data.amount) {
+      return new Intl.NumberFormat().format(d.data.amount) + ' ' + tokenSymbol;
+    }
   });
 }
 
 function tick() {
   link.attr('x1', function (d) {
-    return d.source.x;
+    return d.source.x || 0;
   }).attr('y1', function (d) {
-    return d.source.y;
+    return d.source.y || 0;
   }).attr('x2', function (d) {
-    return d.target.x;
+    return d.target.x || 0;
   }).attr('y2', function (d) {
-    return d.target.y;
+    return d.target.y || 0;
   });
 
   node.attr('transform', function (d) {
@@ -118,6 +138,7 @@ function tick() {
 
 // Toggle children on click.
 function click(d) {
+  return;
   if (!d.parent) {
     return;
   }
