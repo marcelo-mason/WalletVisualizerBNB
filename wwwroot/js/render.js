@@ -5,10 +5,8 @@ let targetAddress = '0x28d804Bf2212E220BC2B7B6252993Db8286dF07f'
 /// ====================================
 
 $.get('api/txs/' + targetAddress, data => {
-  root = stratify(data)
-  root.fixed = true
-  root.x = w / 2
-  root.y = h / 2 - 80
+  console.log(data)
+  parse(data)
   update()
 })
 
@@ -19,28 +17,32 @@ const w = $(document).width()
 const h = $(document).height()
 let node
 let link
-let root
 
-const stratify = d3
-  .stratify()
-  .id(d => d.tx)
-  .parentId(d => d.parent)
+let links = []
+let nodes = {}
 
-// Returns a list of all nodes under the root.
-function flatten(root) {
-  const nodes = []
+function parse(data) {
+  data.forEach(node => {
+    nodes[node.to] = node
+  })
+  nodes[targetAddress] = _.find(data, { tx: 'root' })
 
-  function recurse(node) {
-    if (node.children) {
-      node.children.forEach(recurse)
+  data.forEach((d, i) => {
+    if (d.tx === 'root') {
+      return
     }
-    node.size = Math.sqrt(node.data.balance) / 100 || 10
-    nodes.push(node)
-  }
+    d.size = Math.sqrt(d.balance) / 100 || 10
 
-  recurse(root)
-  root.size = 30
-  return nodes
+    links.push({
+      id: `link-${i}`,
+      source: nodes[d.from],
+      target: nodes[d.to],
+      amount: d.amount,
+      label: d.data && d.amount ? `${d.amount} ZIL` : ''
+    })
+  })
+  console.log('links', links)
+  console.log('nodes', nodes)
 }
 
 var force = d3.layout
@@ -90,32 +92,25 @@ var vis = d3
 /// ============
 
 function update() {
-  var nodes = flatten(root)
-  var links = d3.layout.tree().links(nodes)
-
-  links.forEach((link, i) => {
-    link.id = `link-${i}`
-    if (link.source.data.amount) {
-      link.label = `${link.source.data.amount} ZIL`
-    } else {
-      link.label = ''
-    }
-  })
-
   // Restart the force layout.
   force
-    .nodes(nodes)
+    .nodes(d3.values(nodes))
     .links(links)
     .start()
 
-  link = vis.selectAll('.link').data(links, d => d.target.id)
+  // add the links and the arrows
+  link = vis
+    .append('svg:g')
+    .selectAll('path')
+    .data(force.links())
 
   link.exit().remove()
 
   link
     .enter()
-    .insert('svg:path')
-    .attr('class', 'link')
+    .append('svg:path')
+    .attr('class', d => 'link layer-' + d.layer)
+    .attr('marker-end', 'url(#end)')
     .attr('x1', d => d.source.x)
     .attr('y1', d => d.source.y)
     .attr('x2', d => d.target.x)
@@ -125,7 +120,7 @@ function update() {
       d3.select(this).style('display', 'inherit')
     })
 
-  node = vis.selectAll('.node').data(nodes, d => d.id)
+  node = vis.selectAll('.node').data(force.nodes(), d => d.tx)
 
   node.exit().remove()
 
@@ -171,8 +166,8 @@ function update() {
     .attr('y', '.35em')
     .attr('x', 25)
     .text(d => {
-      if (d.data.balance !== undefined) {
-        const balance = new Intl.NumberFormat().format(d.data.balance)
+      if (d.balance !== undefined) {
+        const balance = new Intl.NumberFormat().format(d.balance)
         return `${balance} ${tokenSymbol}`
       }
     })
@@ -193,6 +188,17 @@ function update() {
 /// ====================================
 
 function tick() {
+  /*
+  link.attr('d', d => {
+    const dx = d.target.x - d.source.x
+    const dy = d.target.y - d.source.y
+    const dr = Math.sqrt(dx * dx + dy * dy)
+
+    return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${
+      d.target.y
+    }`
+  }) */
+
   link.attr(
     'd',
     d =>
@@ -201,11 +207,13 @@ function tick() {
         : `M${d.target.x},${d.target.y}L${d.source.x},${d.source.y}`
   )
 
-  node.attr('transform', d => 'translate(' + d.x + ',' + d.y + ')')
+  node.attr('transform', function(d) {
+    return 'translate(' + d.x + ',' + d.y + ')'
+  })
 }
 
 function click(d) {
-  window.open(`https://etherscan.io/tx/${d.data.tx}`)
+  window.open(`https://etherscan.io/tx/${d.tx}`)
 }
 
 /// ====================================

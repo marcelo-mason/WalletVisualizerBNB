@@ -35,8 +35,11 @@ api.txs = async (req, res) => {
 
   nodes.unshift({
     tx: 'root',
+    from: 'root',
+    to: 'root',
     balance,
-    parent: null
+    parent: null,
+    size: 30
   })
 
   res.send(nodes)

@@ -7,10 +7,8 @@ var targetAddress = '0x28d804Bf2212E220BC2B7B6252993Db8286dF07f';
 /// ====================================
 
 $.get('api/txs/' + targetAddress, function (data) {
-  root = stratify(data);
-  root.fixed = true;
-  root.x = w / 2;
-  root.y = h / 2 - 80;
+  console.log(data);
+  parse(data);
   update();
 });
 
@@ -21,29 +19,32 @@ var w = $(document).width();
 var h = $(document).height();
 var node = void 0;
 var link = void 0;
-var root = void 0;
 
-var stratify = d3.stratify().id(function (d) {
-  return d.tx;
-}).parentId(function (d) {
-  return d.parent;
-});
+var links = [];
+var nodes = {};
 
-// Returns a list of all nodes under the root.
-function flatten(root) {
-  var nodes = [];
+function parse(data) {
+  data.forEach(function (node) {
+    nodes[node.to] = node;
+  });
+  nodes[targetAddress] = _.find(data, { tx: 'root' });
 
-  function recurse(node) {
-    if (node.children) {
-      node.children.forEach(recurse);
+  data.forEach(function (d, i) {
+    if (d.tx === 'root') {
+      return;
     }
-    node.size = Math.sqrt(node.data.balance) / 100 || 10;
-    nodes.push(node);
-  }
+    d.size = Math.sqrt(d.balance) / 100 || 10;
 
-  recurse(root);
-  root.size = 30;
-  return nodes;
+    links.push({
+      id: 'link-' + i,
+      source: nodes[d.from],
+      target: nodes[d.to],
+      amount: d.amount,
+      label: d.data && d.amount ? d.amount + ' ZIL' : ''
+    });
+  });
+  console.log('links', links);
+  console.log('nodes', nodes);
 }
 
 var force = d3.layout.force().size([w, h - 160]).on('tick', tick).gravity(0.1).charge(-200).charge(function (d) {
@@ -70,28 +71,17 @@ var vis = d3.select('body').append('svg:svg').attr('width', w).attr('height', h)
 /// ============
 
 function update() {
-  var nodes = flatten(root);
-  var links = d3.layout.tree().links(nodes);
-
-  links.forEach(function (link, i) {
-    link.id = 'link-' + i;
-    if (link.source.data.amount) {
-      link.label = link.source.data.amount + ' ZIL';
-    } else {
-      link.label = '';
-    }
-  });
-
   // Restart the force layout.
-  force.nodes(nodes).links(links).start();
+  force.nodes(d3.values(nodes)).links(links).start();
 
-  link = vis.selectAll('.link').data(links, function (d) {
-    return d.target.id;
-  });
+  // add the links and the arrows
+  link = vis.append('svg:g').selectAll('path').data(force.links());
 
   link.exit().remove();
 
-  link.enter().insert('svg:path').attr('class', 'link').attr('x1', function (d) {
+  link.enter().append('svg:path').attr('class', function (d) {
+    return 'link layer-' + d.layer;
+  }).attr('marker-end', 'url(#end)').attr('x1', function (d) {
     return d.source.x;
   }).attr('y1', function (d) {
     return d.source.y;
@@ -105,8 +95,8 @@ function update() {
     d3.select(this).style('display', 'inherit');
   });
 
-  node = vis.selectAll('.node').data(nodes, function (d) {
-    return d.id;
+  node = vis.selectAll('.node').data(force.nodes(), function (d) {
+    return d.tx;
   });
 
   node.exit().remove();
@@ -128,8 +118,8 @@ function update() {
   node.append('rect').attr('rx', 6).attr('ry', 6).attr('x', 20).attr('y', -10).attr('width', 80).attr('height', 20).attr('class', 'info hid');
 
   node.append('text').attr('class', 'text hid').attr('y', '.35em').attr('x', 25).text(function (d) {
-    if (d.data.balance !== undefined) {
-      var balance = new Intl.NumberFormat().format(d.data.balance);
+    if (d.balance !== undefined) {
+      var balance = new Intl.NumberFormat().format(d.balance);
       return balance + ' ' + tokenSymbol;
     }
   });
@@ -149,6 +139,16 @@ function update() {
 /// ====================================
 
 function tick() {
+  /*
+  link.attr('d', d => {
+    const dx = d.target.x - d.source.x
+    const dy = d.target.y - d.source.y
+    const dr = Math.sqrt(dx * dx + dy * dy)
+      return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${
+      d.target.y
+    }`
+  }) */
+
   link.attr('d', function (d) {
     return d.source.x < d.target.x ? 'M' + d.source.x + ',' + d.source.y + 'L' + d.target.x + ',' + d.target.y : 'M' + d.target.x + ',' + d.target.y + 'L' + d.source.x + ',' + d.source.y;
   });
@@ -159,7 +159,7 @@ function tick() {
 }
 
 function click(d) {
-  window.open('https://etherscan.io/tx/' + d.data.tx);
+  window.open('https://etherscan.io/tx/' + d.tx);
 }
 
 /// ====================================
