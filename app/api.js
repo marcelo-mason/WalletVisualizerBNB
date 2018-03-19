@@ -6,56 +6,48 @@ const api = module.exports
 api.txs = async (req, res) => {
   const address = req.params.address
   const { balance, txs } = await getData(address)
-  let children = []
+  let nodes = []
+  const MAX_LAYERS = 3
 
-  await async.eachSeries(txs, async tx => {
-    const exists = _.find(children, { tx: tx.tx })
-    if (!exists) {
-      tx.layer = 1
-      children.push(tx)
-    }
-
-    let d = await getData(tx.address, tx)
-    tx.balance = d.balance
-    d.txs.forEach(x => {
-      const exists = _.find(children, { tx: x.tx })
+  async function recurse(parentTx) {
+    let d = await getData(parentTx.address, parentTx)
+    parentTx.balance = d.balance
+    await async.eachSeries(d.txs, async tx => {
+      const exists = _.find(nodes, { tx: tx.tx })
       if (!exists) {
-        x.balance = x.amount
-        x.layer = 2
-        children.push(x)
+        tx.balance = tx.balance || tx.amount
+        tx.layer = parentTx.layer + 1
+        nodes.push(tx)
+        if (tx.layer < MAX_LAYERS) {
+          await recurse(tx)
+        }
       }
     })
+  }
 
-    await async.eachSeries(d.txs, async tx => {
-      let d = await getData(tx.address, tx)
-      tx.balance = d.balance
-      d.txs.forEach(x => {
-        const exists = _.find(children, { tx: x.tx })
-        if (!exists) {
-          x.balance = x.amount
-          x.layer = 3
-          children.push(x)
-        }
-      })
-    })
+  await async.eachSeries(txs, async topLevelTx => {
+    topLevelTx.layer = 1
+    nodes.push(topLevelTx)
+    await recurse(topLevelTx)
   })
 
   console.log('* Data collected')
 
-  children.unshift({
+  nodes.unshift({
     tx: 'root',
     balance,
     parent: null
   })
 
-  res.send(children)
+  res.send(nodes)
 }
 
-async function getData(address, parent) {
+async function getData(address, parent, layer) {
   const parentTx = parent ? parent.tx : 'root'
   const parentBlock = parent ? parent.block : null
 
-  let d = await data.balanceAndTxs(address, parentBlock)
+  let d = await data.balanceAndTxs(address, layer)
+
   let txs = d.txs
   if (parent) {
     txs = txs.filter(x => x.block >= parentBlock)

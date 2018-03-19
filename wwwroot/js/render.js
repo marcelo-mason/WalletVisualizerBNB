@@ -1,5 +1,16 @@
 let tokenSymbol = 'ZIL'
 let targetAddress = '0x28d804Bf2212E220BC2B7B6252993Db8286dF07f'
+// let targetAddress = '0x91e65a05ff0F0E8fBA65F3636a7cd74f4c9f0E2'
+
+/// ====================================
+
+$.get('api/txs/' + targetAddress, data => {
+  root = stratify(data)
+  root.fixed = true
+  root.x = w / 2
+  root.y = h / 2 - 80
+  update()
+})
 
 /// ====================================
 
@@ -31,16 +42,6 @@ function flatten(root) {
   root.size = 30
   return nodes
 }
-
-$.get('api/txs/' + targetAddress, data => {
-  root = stratify(data)
-  root.fixed = true
-  root.x = w / 2
-  root.y = h / 2 - 80
-  update()
-})
-
-// --------------------------
 
 var force = d3.layout
   .force()
@@ -86,11 +87,20 @@ var vis = d3
   .call(zoom)
   .append('svg:g')
 
-// ----------------------------
+/// ============
 
 function update() {
   var nodes = flatten(root)
   var links = d3.layout.tree().links(nodes)
+
+  links.forEach((link, i) => {
+    link.id = `link-${i}`
+    if (link.source.data.amount) {
+      link.label = `${link.source.data.amount} ZIL`
+    } else {
+      link.label = ''
+    }
+  })
 
   // Restart the force layout.
   force
@@ -104,12 +114,16 @@ function update() {
 
   link
     .enter()
-    .insert('line')
+    .insert('svg:path')
     .attr('class', 'link')
     .attr('x1', d => d.source.x)
     .attr('y1', d => d.source.y)
     .attr('x2', d => d.target.x)
     .attr('y2', d => d.target.y)
+    .attr('id', d => d.id)
+    .on('mouseover', function(d) {
+      d3.select(this).style('display', 'inherit')
+    })
 
   node = vis.selectAll('.node').data(nodes, d => d.id)
 
@@ -120,9 +134,10 @@ function update() {
     .append('g')
     .attr('class', 'node')
     .on('click', click)
-    .on('mouseover', function() {
+    .on('mouseover', function(d) {
       d3
         .select(this)
+        .moveToFront()
         .selectAll('.hid')
         .style('display', 'inherit')
     })
@@ -136,10 +151,7 @@ function update() {
 
   vis.selectAll('circle').remove()
 
-  node
-    .append('circle')
-    .attr('r', d => d.size)
-    .style('fill', color)
+  node.append('circle').attr('r', d => d.size)
 
   vis.selectAll('text').remove()
 
@@ -159,48 +171,41 @@ function update() {
     .attr('y', '.35em')
     .attr('x', 25)
     .text(d => {
-      if (d.data.amount) {
-        return `${new Intl.NumberFormat().format(d.data.amount)} ${tokenSymbol}`
+      if (d.data.balance !== undefined) {
+        const balance = new Intl.NumberFormat().format(d.data.balance)
+        return `${balance} ${tokenSymbol}`
       }
     })
+  /*
+  linkLabel = vis.selectAll('.link-label').data(links, d => d.target.id)
+
+  linkLabel
+    .enter()
+    .append('svg:text')
+    .attr('text-anchor', 'middle')
+    .attr('class', 'link-label')
+    .append('svg:textPath')
+    .attr('startOffset', '50%')
+    .attr('xlink:href', d => '#' + d.id)
+    .text(d => d.label) */
 }
 
+/// ====================================
+
 function tick() {
-  link
-    .attr('x1', d => d.source.x || 0)
-    .attr('y1', d => d.source.y || 0)
-    .attr('x2', d => d.target.x || 0)
-    .attr('y2', d => d.target.y || 0)
+  link.attr(
+    'd',
+    d =>
+      d.source.x < d.target.x
+        ? `M${d.source.x},${d.source.y}L${d.target.x},${d.target.y}`
+        : `M${d.target.x},${d.target.y}L${d.source.x},${d.source.y}`
+  )
 
   node.attr('transform', d => 'translate(' + d.x + ',' + d.y + ')')
 }
 
-// Toggle children on click.
 function click(d) {
-  return
-  if (!d.parent) {
-    return
-  }
-  if (!('_children' in d || 'children' in d)) {
-    return
-  }
-  if (d.children) {
-    d._children = d.children
-    d.children = null
-  } else {
-    d.children = d._children
-    d._children = null
-  }
-  update()
+  window.open(`https://etherscan.io/tx/${d.data.tx}`)
 }
 
-// Color leaf nodes orange, and packages white or blue.
-function color(d) {
-  if (d._children) {
-    return '#3182bd'
-  }
-  if (d.data.layer === 3) {
-    return '#ffffff'
-  }
-  return '#ffffff'
-}
+/// ====================================

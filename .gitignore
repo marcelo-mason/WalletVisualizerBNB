@@ -1,6 +1,7 @@
 node_modules/
 dist/
 wwwroot/js/compiled/
+compiled/
 
 storage.json
 .env

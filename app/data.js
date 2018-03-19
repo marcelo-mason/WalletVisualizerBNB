@@ -1,4 +1,5 @@
 const Contract = require('./contract')
+const _ = require('lodash')
 const BigNumber = require('bignumber.js')
 const db = require('./db')
 
@@ -19,14 +20,25 @@ class Data {
       return cached
     }
 
+    console.log('* Pulling txs', address)
+
     let balance
     let rawTxs
     try {
       balance = await this.contract.balance(address)
       rawTxs = await this.contract.txs(address)
     } catch (err) {
-      balance = await this.contract.balance(address)
-      rawTxs = await this.contract.txs(address)
+      try {
+        balance = await this.contract.balance(address)
+        rawTxs = await this.contract.txs(address)
+      } catch (err) {
+        try {
+          balance = await this.contract.balance(address)
+          rawTxs = await this.contract.txs(address)
+        } catch (err) {
+          console.log('* 3 tries failed', err)
+        }
+      }
     }
 
     balance = new BigNumber(balance).dividedBy(10 ** this.decimals).toFixed(0)
@@ -45,6 +57,7 @@ class Data {
         block: tx.blockNumber
       }
     })
+
     await db.txs.create(address, balance, txs)
     return { balance, txs }
   }

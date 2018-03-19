@@ -9,8 +9,6 @@ class TokenContract {
   }
 
   async txs(address, fromBlock) {
-    console.log('* Pulling txs', address)
-
     return this.contract.getPastEvents('Transfer', {
       fromBlock: fromBlock || 0,
       toBlock: 'latest',
