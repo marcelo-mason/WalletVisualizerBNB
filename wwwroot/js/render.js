@@ -31,7 +31,7 @@ function parse(data) {
     if (d.tx === 'root') {
       return
     }
-    d.size = Math.sqrt(d.balance) / 100 || 10
+    d.size = Math.sqrt(d.balance) / 100 || 1
 
     links.push({
       id: `link-${i}`,
@@ -102,7 +102,7 @@ function update() {
   link = vis
     .append('svg:g')
     .selectAll('path')
-    .data(force.links())
+    .data(force.links(), d => d.id)
 
   link.exit().remove()
 
@@ -132,7 +132,6 @@ function update() {
     .on('mouseover', function(d) {
       d3
         .select(this)
-        .moveToFront()
         .selectAll('.hid')
         .style('display', 'inherit')
     })

@@ -33,7 +33,7 @@ function parse(data) {
     if (d.tx === 'root') {
       return;
     }
-    d.size = Math.sqrt(d.balance) / 100 || 10;
+    d.size = Math.sqrt(d.balance) / 100 || 1;
 
     links.push({
       id: 'link-' + i,
@@ -75,7 +75,9 @@ function update() {
   force.nodes(d3.values(nodes)).links(links).start();
 
   // add the links and the arrows
-  link = vis.append('svg:g').selectAll('path').data(force.links());
+  link = vis.append('svg:g').selectAll('path').data(force.links(), function (d) {
+    return d.id;
+  });
 
   link.exit().remove();
 
@@ -102,7 +104,7 @@ function update() {
   node.exit().remove();
 
   node.enter().append('g').attr('class', 'node').on('click', click).on('mouseover', function (d) {
-    d3.select(this).moveToFront().selectAll('.hid').style('display', 'inherit');
+    d3.select(this).selectAll('.hid').style('display', 'inherit');
   }).on('mouseout', function (d) {
     d3.select(this).selectAll('.hid').style('display', 'none');
   }).call(drag);

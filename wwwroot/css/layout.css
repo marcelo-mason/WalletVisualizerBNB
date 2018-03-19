@@ -10,7 +10,7 @@ body {
   cursor: pointer;
   stroke: #2d2d2d;
   fill: #fff;
-  stroke-width: 1px;
+  stroke-width: 0.5px;
 }
 
 .hid {
@@ -31,7 +31,7 @@ body {
 .link {
   fill: none;
   stroke: #4d4d4d;
-  stroke-width: 1px;
+  stroke-width: 0.5px;
 }
 
 .link-label{
