@@ -1,10 +1,11 @@
 let tokenSymbol = 'ZIL'
 let targetAddress = '0x28d804Bf2212E220BC2B7B6252993Db8286dF07f'
-// let targetAddress = '0x91e65a05ff0F0E8fBA65F3636a7cd74f4c9f0E2'
+// let targetAddress = '0x91e65a0e5ff0f0e8fba65f3636a7cd74f4c9f0e2'
+let emptySize = 1
 
 /// ====================================
 
-$.get('api/txs/' + targetAddress, data => {
+$.get('/api/txs/' + targetAddress, data => {
   console.log(data)
   parse(data)
   update()
@@ -13,8 +14,9 @@ $.get('api/txs/' + targetAddress, data => {
 /// ====================================
 
 const d3 = d3 || {}
-const w = $(document).width()
-const h = $(document).height()
+let w = window.innerWidth
+let h = window.innerHeight
+
 let node
 let link
 
@@ -28,11 +30,10 @@ function parse(data) {
   nodes[targetAddress] = _.find(data, { tx: 'root' })
 
   data.forEach((d, i) => {
+    d.size = Math.sqrt(d.balance) / 100 || emptySize
     if (d.tx === 'root') {
       return
     }
-    d.size = Math.sqrt(d.balance) / 100 || 1
-
     links.push({
       id: `link-${i}`,
       source: nodes[d.from],
@@ -80,36 +81,38 @@ var zoom = d3.behavior
     )
   })
 
-var vis = d3
+d3.select(window).on('resize', resize)
+
+var svg = d3
   .select('body')
   .append('svg:svg')
   .attr('width', w)
   .attr('height', h)
   .attr('pointer-event', 'all')
   .call(zoom)
-  .append('svg:g')
+
+var vis = svg.append('svg:g')
 
 /// ============
 
 function update() {
-  // Restart the force layout.
+  // restart the force layout.
   force
     .nodes(d3.values(nodes))
     .links(links)
     .start()
 
-  // add the links and the arrows
+  // select the links
   link = vis
     .append('svg:g')
     .selectAll('path')
     .data(force.links(), d => d.id)
 
-  link.exit().remove()
-
+  // enter links
   link
     .enter()
     .append('svg:path')
-    .attr('class', d => 'link layer-' + d.layer)
+    .attr('class', d => 'link ' + (d.isRoot ? 'top-level' : ''))
     .attr('marker-end', 'url(#end)')
     .attr('x1', d => d.source.x)
     .attr('y1', d => d.source.y)
@@ -120,15 +123,18 @@ function update() {
       d3.select(this).style('display', 'inherit')
     })
 
+  // remove exit
+  link.exit().remove()
+
+  // create node
   node = vis.selectAll('.node').data(force.nodes(), d => d.tx)
 
-  node.exit().remove()
-
+  // enter node
   node
     .enter()
     .append('g')
-    .attr('class', 'node')
-    .on('click', click)
+    .attr('class', d => 'node layer-' + d.layer)
+    .on('click', centerOn)
     .on('mouseover', function(d) {
       d3
         .select(this)
@@ -141,14 +147,11 @@ function update() {
         .selectAll('.hid')
         .style('display', 'none')
     })
-    .call(drag)
 
-  vis.selectAll('circle').remove()
-
+  // add circle
   node.append('circle').attr('r', d => d.size)
 
-  vis.selectAll('text').remove()
-
+  // add info rect
   node
     .append('rect')
     .attr('rx', 6)
@@ -159,6 +162,7 @@ function update() {
     .attr('height', 20)
     .attr('class', 'info hid')
 
+  // add balance text
   node
     .append('text')
     .attr('class', 'text hid')
@@ -170,6 +174,10 @@ function update() {
         return `${balance} ${tokenSymbol}`
       }
     })
+
+  // remove exit
+  node.exit().remove()
+
   /*
   linkLabel = vis.selectAll('.link-label').data(links, d => d.target.id)
 
@@ -206,13 +214,33 @@ function tick() {
         : `M${d.target.x},${d.target.y}L${d.source.x},${d.source.y}`
   )
 
-  node.attr('transform', function(d) {
-    return 'translate(' + d.x + ',' + d.y + ')'
-  })
+  node.attr('transform', d => 'translate(' + d.x + ',' + d.y + ')')
 }
 
 function click(d) {
-  window.open(`https://etherscan.io/tx/${d.tx}`)
+  window.open(`https://etherscan.io/tx/${d.tx}#tokentxns`)
+}
+
+function centerOn(d) {
+  d3.event.stopPropagation()
+  var dcx = window.innerWidth / 2 - d.x * zoom.scale()
+  var dcy = window.innerHeight / 2 - d.y * zoom.scale()
+  zoom.translate([dcx, dcy])
+  vis.attr(
+    'transform',
+    'translate(' + dcx + ',' + dcy + ')scale(' + zoom.scale() + ')'
+  )
+  console.log('centered', dcx, dcy)
+}
+
+function resize() {
+  var width = window.innerWidth
+  var height = window.innerHeight
+  svg.attr('width', width).attr('height', height)
+  force.size([width, height]).resume()
+  w = width
+  h = height
+  console.log('resized', width, height)
 }
 
 /// ====================================

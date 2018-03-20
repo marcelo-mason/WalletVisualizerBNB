@@ -3,7 +3,7 @@ body {
 }
 
 .node circle:hover {
-  fill: #3182bd !important;
+  fill: #4aa3e2 !important;
 }
 
 .node circle {
@@ -11,6 +11,15 @@ body {
   stroke: #2d2d2d;
   fill: #fff;
   stroke-width: 0.5px;
+}
+
+.node.layer-0 circle {
+  stroke-width: 10px;
+  stroke: #4aa3e2;
+}
+
+.node.layer-1 circle {
+  fill: #4aa3e2;
 }
 
 .hid {
@@ -31,10 +40,10 @@ body {
 .link {
   fill: none;
   stroke: #4d4d4d;
-  stroke-width: 0.5px;
+  stroke-width: 1px;
 }
 
-.link-label{
+.link-label {
   //display: none;
   font: 8px sans-serif;
   fill: #8d8d8d;

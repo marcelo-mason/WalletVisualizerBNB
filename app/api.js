@@ -39,7 +39,7 @@ api.txs = async (req, res) => {
     to: 'root',
     balance,
     parent: null,
-    size: 30
+    layer: 0
   })
 
   res.send(nodes)
