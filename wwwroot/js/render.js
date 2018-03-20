@@ -47,8 +47,45 @@ function parse(data) {
       topLevel: d.from.toLowerCase() === targetAddress.toLowerCase()
     })
   })
+
   console.log('links', links)
   console.log('nodes', nodes)
+
+  links.forEach(function(link) {
+    // find other links with same target+source or source+target
+    var same = _.filter(links, {
+      source: link.source,
+      target: link.target
+    })
+    var sameAlt = _.filter(links, {
+      source: link.target,
+      target: link.source
+    })
+    var sameAll = same.concat(sameAlt)
+
+    links.forEach(function(s, i) {
+      s.sameIndex = i + 1
+      s.sameTotal = sameAll.length
+      s.sameTotalHalf = s.sameTotal / 2
+      s.sameUneven = s.sameTotal % 2 !== 0
+      s.sameMiddleLink =
+        s.sameUneven === true && Math.ceil(s.sameTotalHalf) === s.sameIndex
+      s.sameLowerHalf = s.sameIndex <= s.sameTotalHalf
+      s.sameArcDirection = s.sameLowerHalf ? 0 : 1
+      s.sameIndexCorrected = s.sameLowerHalf
+        ? s.sameIndex
+        : s.sameIndex - Math.ceil(s.sameTotalHalf)
+    })
+  })
+
+  var maxSame = _.chain(links)
+    .sortBy(x => x.sameTotal)
+    .last()
+    .value().sameTotal
+
+  links.forEach(link => {
+    link.maxSameHalf = Math.floor(maxSame / 3)
+  })
 }
 
 var force = d3.layout
@@ -203,7 +240,7 @@ function tick() {
       d.target.y
     }`
   }) */
-
+  /*
   link.attr(
     'd',
     d =>
@@ -211,8 +248,27 @@ function tick() {
         ? `M${d.source.x},${d.source.y}L${d.target.x},${d.target.y}`
         : `M${d.target.x},${d.target.y}L${d.source.x},${d.source.y}`
   )
+*/
+
+  link.attr('d', linkArc)
 
   node.attr('transform', d => 'translate(' + d.x + ',' + d.y + ')')
+}
+
+function linkArc(d) {
+  const dx = d.target.x - d.source.x
+  const dy = d.target.y - d.source.y
+  const dr = Math.sqrt(dx * dx + dy * dy)
+  const unevenCorrection = d.sameUneven ? 0 : 0.5
+  let arc = dr * d.maxSameHalf / (d.sameIndexCorrected - unevenCorrection)
+
+  if (d.sameMiddleLink) {
+    arc = 0
+  }
+
+  return `M${d.source.x},${d.source.y}A${arc},${arc} 0 0,${
+    d.sameArcDirection
+  } ${d.target.x},${d.target.y}`
 }
 
 function openEtherscan(d) {
@@ -255,7 +311,7 @@ function selectNode(d) {
 }
 
 function formatTokenNumber(num, tokenSymbol) {
-  if (!num) {
+  if (typeof num === 'undefined') {
     return ''
   }
   const balance = new Intl.NumberFormat().format(num)

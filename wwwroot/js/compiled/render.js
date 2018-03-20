@@ -55,8 +55,41 @@ function parse(data) {
       topLevel: d.from.toLowerCase() === targetAddress.toLowerCase()
     });
   });
+
   console.log('links', links);
   console.log('nodes', nodes);
+
+  links.forEach(function (link) {
+    // find other links with same target+source or source+target
+    var same = _.filter(links, {
+      source: link.source,
+      target: link.target
+    });
+    var sameAlt = _.filter(links, {
+      source: link.target,
+      target: link.source
+    });
+    var sameAll = same.concat(sameAlt);
+
+    links.forEach(function (s, i) {
+      s.sameIndex = i + 1;
+      s.sameTotal = sameAll.length;
+      s.sameTotalHalf = s.sameTotal / 2;
+      s.sameUneven = s.sameTotal % 2 !== 0;
+      s.sameMiddleLink = s.sameUneven === true && Math.ceil(s.sameTotalHalf) === s.sameIndex;
+      s.sameLowerHalf = s.sameIndex <= s.sameTotalHalf;
+      s.sameArcDirection = s.sameLowerHalf ? 0 : 1;
+      s.sameIndexCorrected = s.sameLowerHalf ? s.sameIndex : s.sameIndex - Math.ceil(s.sameTotalHalf);
+    });
+  });
+
+  var maxSame = _.chain(links).sortBy(function (x) {
+    return x.sameTotal;
+  }).last().value().sameTotal;
+
+  links.forEach(function (link) {
+    link.maxSameHalf = Math.floor(maxSame / 3);
+  });
 }
 
 var force = d3.layout.force().size([w, h - 160]).on('tick', tick).gravity(0.1).charge(-200).charge(function (d) {
@@ -173,14 +206,35 @@ function tick() {
       d.target.y
     }`
   }) */
+  /*
+  link.attr(
+    'd',
+    d =>
+      d.source.x < d.target.x
+        ? `M${d.source.x},${d.source.y}L${d.target.x},${d.target.y}`
+        : `M${d.target.x},${d.target.y}L${d.source.x},${d.source.y}`
+  )
+  */
 
-  link.attr('d', function (d) {
-    return d.source.x < d.target.x ? 'M' + d.source.x + ',' + d.source.y + 'L' + d.target.x + ',' + d.target.y : 'M' + d.target.x + ',' + d.target.y + 'L' + d.source.x + ',' + d.source.y;
-  });
+  link.attr('d', linkArc);
 
   node.attr('transform', function (d) {
     return 'translate(' + d.x + ',' + d.y + ')';
   });
+}
+
+function linkArc(d) {
+  var dx = d.target.x - d.source.x;
+  var dy = d.target.y - d.source.y;
+  var dr = Math.sqrt(dx * dx + dy * dy);
+  var unevenCorrection = d.sameUneven ? 0 : 0.5;
+  var arc = dr * d.maxSameHalf / (d.sameIndexCorrected - unevenCorrection);
+
+  if (d.sameMiddleLink) {
+    arc = 0;
+  }
+
+  return 'M' + d.source.x + ',' + d.source.y + 'A' + arc + ',' + arc + ' 0 0,' + d.sameArcDirection + ' ' + d.target.x + ',' + d.target.y;
 }
 
 function openEtherscan(d) {
@@ -217,7 +271,7 @@ function selectNode(d) {
 }
 
 function formatTokenNumber(num, tokenSymbol) {
-  if (!num) {
+  if (typeof num === 'undefined') {
     return '';
   }
   var balance = new Intl.NumberFormat().format(num);
