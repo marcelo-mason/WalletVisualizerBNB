@@ -7,7 +7,7 @@ api.txs = async (req, res) => {
   const address = req.params.address
   const { balance, txs } = await getData(address)
   let nodes = []
-  const MAX_LAYERS = 3
+  const MAX_LAYERS = req.params.layers || 2
 
   async function recurse(parentTx) {
     let d = await getData(parentTx.address, parentTx)

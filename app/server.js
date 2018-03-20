@@ -14,8 +14,8 @@ app.use(express.static(join(__dirname, '../wwwroot')))
 
 // api
 const api = require('./api')
-app.route('/api/txs/:address').get(api.txs)
-app.route('/address/:address').get((req, res) => {
+app.route('/api/txs/:address/:layers?').get(api.txs)
+app.route('/address/:address/:layers?').get((req, res) => {
   res.sendFile(join(__dirname, '../wwwroot/index.html'))
 })
 app.route('/').get((req, res) => {

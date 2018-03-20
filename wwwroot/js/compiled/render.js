@@ -10,13 +10,14 @@ var emptySize = 1;
 /// ====================================
 
 var _window$location$path = window.location.pathname.split('/'),
-    _window$location$path2 = _slicedToArray(_window$location$path, 3),
+    _window$location$path2 = _slicedToArray(_window$location$path, 4),
     controller = _window$location$path2[1],
-    targetAddress = _window$location$path2[2];
+    targetAddress = _window$location$path2[2],
+    layers = _window$location$path2[3];
 
 if (controller.toLowerCase() === 'address' && targetAddress.length) {
   console.log('* loading', targetAddress);
-  $.get('/api/txs/' + targetAddress, function (data) {
+  $.get('/api/txs/' + targetAddress + '/' + (layers || 2), function (data) {
     console.log('* loaded', data);
     parse(data);
     update();
@@ -161,22 +162,12 @@ function update() {
     return d.size;
   });
 
-  // add balance rect
-  node.append('rect').attr('rx', 4).attr('ry', 4).attr('x', 0).attr('y', -8).attr('width', function (d) {
-    if (d.balance !== undefined) {
-      var str = formatTokenNumber(d.balance, tokenSymbol);
-      return $.fn.textWidth(str, '10px sans-serif') + 10;
-    }
-  }).attr('height', 16).attr('class', 'info hid').on('click', openEtherscan);
-
   // add balance text
-  var text = node.append('text').attr('class', 'text hid');
-
-  text.append('tspan').attr('dy', '10px').attr('x', 5).attr('y', -6).text(function (d) {
+  node.append('text').attr('class', 'text hid').attr('x', 0).attr('y', 3).text(function (d) {
     if (d.balance !== undefined) {
       return formatTokenNumber(d.balance, tokenSymbol);
     }
-  });
+  }).on('click', openEtherscan);
 
   // remove exit
   node.exit().remove();
@@ -215,12 +206,15 @@ function tick() {
         : `M${d.target.x},${d.target.y}L${d.source.x},${d.source.y}`
   )
   */
+  if (link) {
+    link.attr('d', linkArc);
+  }
 
-  link.attr('d', linkArc);
-
-  node.attr('transform', function (d) {
-    return 'translate(' + d.x + ',' + d.y + ')';
-  });
+  if (node) {
+    node.attr('transform', function (d) {
+      return 'translate(' + d.x + ',' + d.y + ')';
+    });
+  }
 }
 
 function linkArc(d) {

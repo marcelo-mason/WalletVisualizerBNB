@@ -5,10 +5,10 @@ let emptySize = 1
 
 /// ====================================
 
-let [, controller, targetAddress] = window.location.pathname.split('/')
+let [, controller, targetAddress, layers] = window.location.pathname.split('/')
 if (controller.toLowerCase() === 'address' && targetAddress.length) {
   console.log('* loading', targetAddress)
-  $.get('/api/txs/' + targetAddress, data => {
+  $.get(`/api/txs/${targetAddress}/${layers || 2}`, data => {
     console.log('* loaded', data)
     parse(data)
     update()
@@ -179,36 +179,18 @@ function update() {
   // add circle
   node.append('circle').attr('r', d => d.size)
 
-  // add balance rect
-  node
-    .append('rect')
-    .attr('rx', 4)
-    .attr('ry', 4)
-    .attr('x', 0)
-    .attr('y', -8)
-    .attr('width', d => {
-      if (d.balance !== undefined) {
-        const str = formatTokenNumber(d.balance, tokenSymbol)
-        return $.fn.textWidth(str, '10px sans-serif') + 10
-      }
-    })
-    .attr('height', 16)
-    .attr('class', 'info hid')
-    .on('click', openEtherscan)
-
   // add balance text
-  const text = node.append('text').attr('class', 'text hid')
-
-  text
-    .append('tspan')
-    .attr('dy', '10px')
-    .attr('x', 5)
-    .attr('y', -6)
+  node
+    .append('text')
+    .attr('class', 'text hid')
+    .attr('x', 0)
+    .attr('y', 3)
     .text(d => {
       if (d.balance !== undefined) {
         return formatTokenNumber(d.balance, tokenSymbol)
       }
     })
+    .on('click', openEtherscan)
 
   // remove exit
   node.exit().remove()
@@ -249,10 +231,13 @@ function tick() {
         : `M${d.target.x},${d.target.y}L${d.source.x},${d.source.y}`
   )
 */
+  if (link) {
+    link.attr('d', linkArc)
+  }
 
-  link.attr('d', linkArc)
-
-  node.attr('transform', d => 'translate(' + d.x + ',' + d.y + ')')
+  if (node) {
+    node.attr('transform', d => 'translate(' + d.x + ',' + d.y + ')')
+  }
 }
 
 function linkArc(d) {

@@ -8,15 +8,15 @@ body {
   stroke-width: 0.5px;
 }
 
-.node.selected circle {
-  stroke: #1d1d1d;
-  fill: #1d1d1d !important
-}
-
 .node.layer-0 circle {
   fill: #4aa3e2;
   stroke: #77bcec;
   stroke-width: 5px;
+}
+
+.node.selected circle {
+  stroke: #1d1d1d;
+  fill: #1d1d1d !important
 }
 
 .node.layer-1 circle {
@@ -25,6 +25,7 @@ body {
 
 .hid {
   display: none;
+  text-anchor: middle
 }
 
 .info {
