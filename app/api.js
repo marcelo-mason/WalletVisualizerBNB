@@ -18,6 +18,7 @@ api.txs = async (req, res) => {
         tx.balance = tx.balance || tx.amount
         tx.layer = parentTx.layer + 1
         nodes.push(tx)
+        console.log(nodes.length, tx.tx)
         if (tx.layer < MAX_LAYERS) {
           await recurse(tx)
         }
@@ -28,10 +29,9 @@ api.txs = async (req, res) => {
   await async.eachSeries(txs, async topLevelTx => {
     topLevelTx.layer = 1
     nodes.push(topLevelTx)
+    console.log('PARENT', topLevelTx.tx)
     await recurse(topLevelTx)
   })
-
-  console.log('* Data collected')
 
   nodes.unshift({
     tx: 'root',
@@ -41,6 +41,8 @@ api.txs = async (req, res) => {
     parent: null,
     layer: 0
   })
+
+  console.log('* Nodes collected', nodes.length)
 
   res.send(nodes)
 }

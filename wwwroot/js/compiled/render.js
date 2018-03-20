@@ -1,17 +1,27 @@
 'use strict';
 
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
 var tokenSymbol = 'ZIL';
-var targetAddress = '0x28d804Bf2212E220BC2B7B6252993Db8286dF07f';
-// let targetAddress = '0x91e65a0e5ff0f0e8fba65f3636a7cd74f4c9f0e2'
 var emptySize = 1;
+// let targetAddress = '0x28d804Bf2212E220BC2B7B6252993Db8286dF07f'
+// let targetAddress = '0x91e65a0e5ff0f0e8fba65f3636a7cd74f4c9f0e2'
 
 /// ====================================
 
-$.get('/api/txs/' + targetAddress, function (data) {
-  console.log(data);
-  parse(data);
-  update();
-});
+var _window$location$path = window.location.pathname.split('/'),
+    _window$location$path2 = _slicedToArray(_window$location$path, 3),
+    controller = _window$location$path2[1],
+    targetAddress = _window$location$path2[2];
+
+if (controller.toLowerCase() === 'address' && targetAddress.length) {
+  console.log('* loading', targetAddress);
+  $.get('/api/txs/' + targetAddress, function (data) {
+    console.log('* loaded', data);
+    parse(data);
+    update();
+  });
+}
 
 /// ====================================
 
@@ -41,7 +51,8 @@ function parse(data) {
       source: nodes[d.from],
       target: nodes[d.to],
       amount: d.amount,
-      label: d.data && d.amount ? d.amount + ' ZIL' : ''
+      label: d.data && d.amount ? d.amount + ' ZIL' : '',
+      topLevel: d.from.toLowerCase() === targetAddress.toLowerCase()
     });
   });
   console.log('links', links);
@@ -86,7 +97,7 @@ function update() {
 
   // enter links
   link.enter().append('svg:path').attr('class', function (d) {
-    return 'link ' + (d.isRoot ? 'top-level' : '');
+    return 'link' + (d.topLevel ? ' top-level' : '');
   }).attr('marker-end', 'url(#end)').attr('x1', function (d) {
     return d.source.x;
   }).attr('y1', function (d) {
@@ -97,8 +108,6 @@ function update() {
     return d.target.y;
   }).attr('id', function (d) {
     return d.id;
-  }).on('mouseover', function (d) {
-    d3.select(this).style('display', 'inherit');
   });
 
   // remove exit
@@ -112,25 +121,27 @@ function update() {
   // enter node
   node.enter().append('g').attr('class', function (d) {
     return 'node layer-' + d.layer;
-  }).on('click', centerOn).on('mouseover', function (d) {
-    d3.select(this).selectAll('.hid').style('display', 'inherit');
-  }).on('mouseout', function (d) {
-    d3.select(this).selectAll('.hid').style('display', 'none');
-  });
+  }).on('mouseover', selectNode).call(drag);
 
   // add circle
   node.append('circle').attr('r', function (d) {
     return d.size;
   });
 
-  // add info rect
-  node.append('rect').attr('rx', 6).attr('ry', 6).attr('x', 20).attr('y', -10).attr('width', 80).attr('height', 20).attr('class', 'info hid');
+  // add balance rect
+  node.append('rect').attr('rx', 4).attr('ry', 4).attr('x', 0).attr('y', -8).attr('width', function (d) {
+    if (d.balance !== undefined) {
+      var str = formatTokenNumber(d.balance, tokenSymbol);
+      return $.fn.textWidth(str, '10px sans-serif') + 10;
+    }
+  }).attr('height', 16).attr('class', 'info hid').on('click', openEtherscan);
 
   // add balance text
-  node.append('text').attr('class', 'text hid').attr('y', '.35em').attr('x', 25).text(function (d) {
+  var text = node.append('text').attr('class', 'text hid');
+
+  text.append('tspan').attr('dy', '10px').attr('x', 5).attr('y', -6).text(function (d) {
     if (d.balance !== undefined) {
-      var balance = new Intl.NumberFormat().format(d.balance);
-      return balance + ' ' + tokenSymbol;
+      return formatTokenNumber(d.balance, tokenSymbol);
     }
   });
 
@@ -172,8 +183,18 @@ function tick() {
   });
 }
 
-function click(d) {
+function openEtherscan(d) {
   window.open('https://etherscan.io/tx/' + d.tx + '#tokentxns');
+}
+
+function resize() {
+  var width = window.innerWidth;
+  var height = window.innerHeight;
+  svg.attr('width', width).attr('height', height);
+  force.size([width, height]).resume();
+  w = width;
+  h = height;
+  console.log('resized', width, height);
 }
 
 function centerOn(d) {
@@ -185,14 +206,22 @@ function centerOn(d) {
   console.log('centered', dcx, dcy);
 }
 
-function resize() {
-  var width = window.innerWidth;
-  var height = window.innerHeight;
-  svg.attr('width', width).attr('height', height);
-  force.size([width, height]).resume();
-  w = width;
-  h = height;
-  console.log('resized', width, height);
+function selectNode(d) {
+  d3.selectAll('.node').classed('selected', false);
+  d3.select(this).classed('selected', true);
+
+  d3.selectAll('.hid').style('display', 'none');
+  d3.select(this).selectAll('.hid').style('display', 'inherit');
+
+  d3.select(this).moveToFront();
+}
+
+function formatTokenNumber(num, tokenSymbol) {
+  if (!num) {
+    return '';
+  }
+  var balance = new Intl.NumberFormat().format(num);
+  return balance + ' ' + tokenSymbol;
 }
 
 /// ====================================

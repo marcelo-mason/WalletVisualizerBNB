@@ -2,20 +2,21 @@ body {
   background: #2d2d2d;
 }
 
-.node circle:hover {
-  fill: #4aa3e2 !important;
-}
-
 .node circle {
-  cursor: pointer;
   stroke: #2d2d2d;
   fill: #fff;
   stroke-width: 0.5px;
 }
 
+.node.selected circle {
+  stroke: #1d1d1d;
+  fill: #1d1d1d !important
+}
+
 .node.layer-0 circle {
-  stroke-width: 10px;
-  stroke: #4aa3e2;
+  fill: #4aa3e2;
+  stroke: #77bcec;
+  stroke-width: 5px;
 }
 
 .node.layer-1 circle {
@@ -28,9 +29,10 @@ body {
 
 .info {
   fill: #1d1d1d;
+  cursor: pointer;
 }
 
-.node text {
+text {
   cursor: pointer;
   pointer-events: none;
   font: 10px sans-serif;
@@ -41,6 +43,11 @@ body {
   fill: none;
   stroke: #4d4d4d;
   stroke-width: 1px;
+}
+
+.link.top-level {
+  stroke: #4aa3e2;
+  stroke-width: 2.5px;
 }
 
 .link-label {

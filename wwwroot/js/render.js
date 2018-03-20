@@ -1,15 +1,19 @@
 let tokenSymbol = 'ZIL'
-let targetAddress = '0x28d804Bf2212E220BC2B7B6252993Db8286dF07f'
-// let targetAddress = '0x91e65a0e5ff0f0e8fba65f3636a7cd74f4c9f0e2'
 let emptySize = 1
+// let targetAddress = '0x28d804Bf2212E220BC2B7B6252993Db8286dF07f'
+// let targetAddress = '0x91e65a0e5ff0f0e8fba65f3636a7cd74f4c9f0e2'
 
 /// ====================================
 
-$.get('/api/txs/' + targetAddress, data => {
-  console.log(data)
-  parse(data)
-  update()
-})
+let [, controller, targetAddress] = window.location.pathname.split('/')
+if (controller.toLowerCase() === 'address' && targetAddress.length) {
+  console.log('* loading', targetAddress)
+  $.get('/api/txs/' + targetAddress, data => {
+    console.log('* loaded', data)
+    parse(data)
+    update()
+  })
+}
 
 /// ====================================
 
@@ -39,7 +43,8 @@ function parse(data) {
       source: nodes[d.from],
       target: nodes[d.to],
       amount: d.amount,
-      label: d.data && d.amount ? `${d.amount} ZIL` : ''
+      label: d.data && d.amount ? `${d.amount} ZIL` : '',
+      topLevel: d.from.toLowerCase() === targetAddress.toLowerCase()
     })
   })
   console.log('links', links)
@@ -112,16 +117,13 @@ function update() {
   link
     .enter()
     .append('svg:path')
-    .attr('class', d => 'link ' + (d.isRoot ? 'top-level' : ''))
+    .attr('class', d => 'link' + (d.topLevel ? ' top-level' : ''))
     .attr('marker-end', 'url(#end)')
     .attr('x1', d => d.source.x)
     .attr('y1', d => d.source.y)
     .attr('x2', d => d.target.x)
     .attr('y2', d => d.target.y)
     .attr('id', d => d.id)
-    .on('mouseover', function(d) {
-      d3.select(this).style('display', 'inherit')
-    })
 
   // remove exit
   link.exit().remove()
@@ -134,44 +136,40 @@ function update() {
     .enter()
     .append('g')
     .attr('class', d => 'node layer-' + d.layer)
-    .on('click', centerOn)
-    .on('mouseover', function(d) {
-      d3
-        .select(this)
-        .selectAll('.hid')
-        .style('display', 'inherit')
-    })
-    .on('mouseout', function(d) {
-      d3
-        .select(this)
-        .selectAll('.hid')
-        .style('display', 'none')
-    })
+    .on('mouseover', selectNode)
+    .call(drag)
 
   // add circle
   node.append('circle').attr('r', d => d.size)
 
-  // add info rect
+  // add balance rect
   node
     .append('rect')
-    .attr('rx', 6)
-    .attr('ry', 6)
-    .attr('x', 20)
-    .attr('y', -10)
-    .attr('width', 80)
-    .attr('height', 20)
+    .attr('rx', 4)
+    .attr('ry', 4)
+    .attr('x', 0)
+    .attr('y', -8)
+    .attr('width', d => {
+      if (d.balance !== undefined) {
+        const str = formatTokenNumber(d.balance, tokenSymbol)
+        return $.fn.textWidth(str, '10px sans-serif') + 10
+      }
+    })
+    .attr('height', 16)
     .attr('class', 'info hid')
+    .on('click', openEtherscan)
 
   // add balance text
-  node
-    .append('text')
-    .attr('class', 'text hid')
-    .attr('y', '.35em')
-    .attr('x', 25)
+  const text = node.append('text').attr('class', 'text hid')
+
+  text
+    .append('tspan')
+    .attr('dy', '10px')
+    .attr('x', 5)
+    .attr('y', -6)
     .text(d => {
       if (d.balance !== undefined) {
-        const balance = new Intl.NumberFormat().format(d.balance)
-        return `${balance} ${tokenSymbol}`
+        return formatTokenNumber(d.balance, tokenSymbol)
       }
     })
 
@@ -217,8 +215,18 @@ function tick() {
   node.attr('transform', d => 'translate(' + d.x + ',' + d.y + ')')
 }
 
-function click(d) {
+function openEtherscan(d) {
   window.open(`https://etherscan.io/tx/${d.tx}#tokentxns`)
+}
+
+function resize() {
+  var width = window.innerWidth
+  var height = window.innerHeight
+  svg.attr('width', width).attr('height', height)
+  force.size([width, height]).resume()
+  w = width
+  h = height
+  console.log('resized', width, height)
 }
 
 function centerOn(d) {
@@ -233,14 +241,25 @@ function centerOn(d) {
   console.log('centered', dcx, dcy)
 }
 
-function resize() {
-  var width = window.innerWidth
-  var height = window.innerHeight
-  svg.attr('width', width).attr('height', height)
-  force.size([width, height]).resume()
-  w = width
-  h = height
-  console.log('resized', width, height)
+function selectNode(d) {
+  d3.selectAll('.node').classed('selected', false)
+  d3.select(this).classed('selected', true)
+
+  d3.selectAll('.hid').style('display', 'none')
+  d3
+    .select(this)
+    .selectAll('.hid')
+    .style('display', 'inherit')
+
+  d3.select(this).moveToFront()
+}
+
+function formatTokenNumber(num, tokenSymbol) {
+  if (!num) {
+    return ''
+  }
+  const balance = new Intl.NumberFormat().format(num)
+  return `${balance} ${tokenSymbol}`
 }
 
 /// ====================================
