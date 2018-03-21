@@ -7,7 +7,7 @@ var cache = new Cache()
 
 gulp.task('compile', function() {
   var stream = gulp
-    .src('wwwroot/js/*.js') // your ES2015 code
+    .src('app/scripts/**/*.js') // your ES2015 code
     .pipe(cache.filter()) // remember files
     .pipe(
       babel({
@@ -16,14 +16,14 @@ gulp.task('compile', function() {
       })
     ) // compile new ones
     .pipe(cache.cache()) // cache them
-    .pipe(gulp.dest('wwwroot/js/compiled')) // write them
+    .pipe(gulp.dest('wwwroot/js')) // write them
   return stream // important for gulp-nodemon to wait for completion
 })
 
 gulp.task('watch', ['compile'], function() {
   var stream = nodemon({
     script: 'server.js',
-    watch: 'wwwroot', // watch ES2015 code
+    watch: 'app/scripts', // watch ES2015 code
     tasks: ['compile'] // compile synchronously onChange
   })
   return stream

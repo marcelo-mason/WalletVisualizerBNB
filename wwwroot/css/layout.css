@@ -9,18 +9,25 @@ body {
 }
 
 .node.layer-0 circle {
-  fill: #4aa3e2;
-  stroke: #77bcec;
+  fill: #076eb8;
+  stroke: #4aa3e2;
   stroke-width: 5px;
 }
 
-.node.selected circle {
-  stroke: #1d1d1d;
-  fill: #1d1d1d !important
+.node.layer-0.selected circle {
+  fill: #076eb8;
+  stroke: #4aa3e2;
+  stroke-width: 5px;
 }
 
 .node.layer-1 circle {
   fill: #4aa3e2;
+  stroke-width: 0;
+}
+
+.node.selected circle {
+  stroke: #1d1d1d;
+  fill: #1d1d1d 
 }
 
 .hid {
@@ -48,6 +55,11 @@ text {
 
 .link.top-level {
   stroke: #4aa3e2;
+  stroke-width: 2.5px;
+}
+
+.link.selected {
+  stroke: #1d1d1d;
   stroke-width: 2.5px;
 }
 
