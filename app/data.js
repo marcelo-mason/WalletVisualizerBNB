@@ -28,7 +28,8 @@ class Data {
         .dividedBy(10 ** this.decimals)
         .toFixed(0)
       return {
-        id: tx.transactionHash,
+        id: vals._to,
+        tx: tx.transactionHash,
         address: vals._to,
         to: vals._to,
         from: vals._from,

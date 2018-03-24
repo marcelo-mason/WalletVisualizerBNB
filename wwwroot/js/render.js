@@ -57,12 +57,8 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     var txs = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
 
     txs.forEach(function (node) {
-      if (node.id === 'root') {
-        nodes[targetAddress] = node;
-        return;
-      }
-      if (!nodes[node.to]) {
-        nodes[node.to] = node;
+      if (!nodes[node.to.toLowerCase()]) {
+        nodes[node.to.toLowerCase()] = node;
       }
     });
 
@@ -71,8 +67,8 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       if (d.id === 'root') {
         return;
       }
-      var source = nodes[d.from];
-      var target = nodes[d.to];
+      var source = nodes[d.from.toLowerCase()];
+      var target = nodes[d.to.toLowerCase()];
       var exist = _.find(links, { source: source, target: target });
       if (!exist) links.push({
         id: 'link-' + target.layer + '-' + i,
@@ -216,7 +212,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
   }
 
   function openEtherscan(d) {
-    window.open('https://etherscan.io/tx/' + d.id + '#tokentxns');
+    window.open('https://etherscan.io/tx/' + d.tx + '#tokentxns');
   }
 
   function resize() {

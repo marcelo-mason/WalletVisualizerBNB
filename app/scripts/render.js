@@ -46,12 +46,8 @@
 
   function parse(txs = []) {
     txs.forEach(node => {
-      if (node.id === 'root') {
-        nodes[targetAddress] = node
-        return
-      }
-      if (!nodes[node.to]) {
-        nodes[node.to] = node
+      if (!nodes[node.to.toLowerCase()]) {
+        nodes[node.to.toLowerCase()] = node
       }
     })
 
@@ -60,8 +56,8 @@
       if (d.id === 'root') {
         return
       }
-      const source = nodes[d.from]
-      const target = nodes[d.to]
+      const source = nodes[d.from.toLowerCase()]
+      const target = nodes[d.to.toLowerCase()]
       const exist = _.find(links, { source, target })
       if (!exist)
         links.push({
@@ -234,7 +230,7 @@
   }
 
   function openEtherscan(d) {
-    window.open(`https://etherscan.io/tx/${d.id}#tokentxns`)
+    window.open(`https://etherscan.io/tx/${d.tx}#tokentxns`)
   }
 
   function resize() {
