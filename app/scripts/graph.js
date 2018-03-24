@@ -15,18 +15,18 @@ var Graph = (function(undefined) {
   var findPaths = function(map, start, end, infinity) {
     infinity = infinity || Infinity
 
-    var costs = {}
+    var amounts = {}
     var open = { '0': [start] }
     var predecessors = {}
     var keys
 
-    var addToOpen = function(cost, vertex) {
-      var key = '' + cost
+    var addToOpen = function(amount, vertex) {
+      var key = '' + amount
       if (!open[key]) open[key] = []
       open[key].push(vertex)
     }
 
-    costs[start] = 0
+    amounts[start] = 0
 
     while (open) {
       if (!(keys = extractKeys(open)).length) break
@@ -43,12 +43,12 @@ var Graph = (function(undefined) {
 
       for (var vertex in adjacentNodes) {
         if (Object.prototype.hasOwnProperty.call(adjacentNodes, vertex)) {
-          var cost = adjacentNodes[vertex]
-          var totalCost = cost + currentCost
-          var vertexCost = costs[vertex]
+          var amount = adjacentNodes[vertex]
+          var totalCost = amount + currentCost
+          var vertexCost = amounts[vertex]
 
           if (vertexCost === undefined || vertexCost > totalCost) {
-            costs[vertex] = totalCost
+            amounts[vertex] = totalCost
             addToOpen(totalCost, vertex)
             predecessors[vertex] = node
           }
@@ -56,7 +56,7 @@ var Graph = (function(undefined) {
       }
     }
 
-    if (costs[end] === undefined) {
+    if (amounts[end] === undefined) {
       return null
     } else {
       return predecessors
@@ -115,8 +115,24 @@ var Graph = (function(undefined) {
     }
   }
 
-  var Graph = function(map) {
-    this.map = map
+  var Graph = function(links) {
+    const edgeMap = {}
+    links.forEach(link => {
+      if (edgeMap[link.source.id]) {
+        edgeMap[link.source.id][link.target.id] = link.amount
+      } else {
+        edgeMap[link.source.id] = {}
+        edgeMap[link.source.id][link.target.id] = link.amount
+      }
+      if (edgeMap[link.target.id]) {
+        edgeMap[link.target.id][link.source.id] = link.amount
+      } else {
+        edgeMap[link.target.id] = {}
+        edgeMap[link.target.id][link.source.id] = link.amount
+      }
+    })
+
+    this.map = edgeMap
   }
 
   Graph.prototype.findShortestPath = function(start, end) {

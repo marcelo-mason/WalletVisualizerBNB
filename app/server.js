@@ -13,8 +13,6 @@ app.use(bodyParser.json())
 app.use(express.static(join(__dirname, '../wwwroot')))
 
 // api
-const api = require('./api')
-app.route('/api/txs/:address/:layers?').get(api.txs)
 app.route('/address/:address/:layers?').get((req, res) => {
   res.sendFile(join(__dirname, '../wwwroot/index.html'))
 })
@@ -24,10 +22,19 @@ app.route('/').get((req, res) => {
 
 // start api
 const port = process.env.PORT || 3000
-app.listen(port)
+const server = app.listen(port)
 console.log(`Started on port ${port}`)
 
 // errors
 process.on('unhandledRejection', (reason, p) => {
   console.log(p)
+})
+
+// start socket.io
+var io = require('socket.io')(server)
+const Controller = require('./controller')
+
+io.on('connection', socket => {
+  console.log('Socket connected', socket.id)
+  new Controller(socket).init()
 })

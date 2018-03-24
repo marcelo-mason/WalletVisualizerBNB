@@ -1,3 +1,46 @@
+/* Scrollbar Chrome*/
+*::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+  background: #2d2d2d !important;
+  border: 1px solid #2d2d2d !important;
+}
+*::-webkit-scrollbar-button {
+  display: none !important;
+}
+*::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-track {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+*::-webkit-scrollbar-thumb {
+  min-height: 28px !important;
+  background: #1e1e1e !important;
+}
+*::-webkit-scrollbar-corner,
+*::-webkit-scrollbar-track {
+  background: #2d2d2d !important;
+}
 
-html, body { margin:0; padding:0; overflow:hidden }
-svg { display: block; margin: auto }
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+svg {
+  display: block;
+  margin: auto;
+}
+
+.info-panel {
+  font-family: consolas, Helvetica, Arial, sans-serif;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  text-align: right;
+  color: hsl(220, 13%, 39%);
+  font-size: 11px;
+  max-height: 400px;
+  overflow: auto;
+}

@@ -1,5 +1,4 @@
 const Contract = require('./contract')
-const _ = require('lodash')
 const BigNumber = require('bignumber.js')
 const db = require('./db')
 
@@ -11,37 +10,17 @@ class Data {
       this.decimals
     )
   }
+
   /**
    * Returns all eth transactions
    */
-  async balanceAndTxs(address) {
-    const cached = await db.txs.get(address)
-    if (cached) {
-      return cached
+  async txs(address) {
+    const cached = await db.addresses.get(address)
+    if (cached && cached.txs) {
+      return cached.txs
     }
 
-    console.log('* Pulling txs', address)
-
-    let balance
-    let rawTxs
-    try {
-      balance = await this.contract.balance(address)
-      rawTxs = await this.contract.txs(address)
-    } catch (err) {
-      try {
-        balance = await this.contract.balance(address)
-        rawTxs = await this.contract.txs(address)
-      } catch (err) {
-        try {
-          balance = await this.contract.balance(address)
-          rawTxs = await this.contract.txs(address)
-        } catch (err) {
-          console.log('* 3 tries failed', err)
-        }
-      }
-    }
-
-    balance = new BigNumber(balance).dividedBy(10 ** this.decimals).toFixed(0)
+    let rawTxs = await this.contract.txs(address)
 
     const txs = rawTxs.map(tx => {
       const vals = tx.returnValues
@@ -49,7 +28,7 @@ class Data {
         .dividedBy(10 ** this.decimals)
         .toFixed(0)
       return {
-        tx: tx.transactionHash,
+        id: tx.transactionHash,
         address: vals._to,
         to: vals._to,
         from: vals._from,
@@ -58,8 +37,24 @@ class Data {
       }
     })
 
-    await db.txs.create(address, balance, txs)
-    return { balance, txs }
+    await db.addresses.addTxs(address, txs)
+    return txs
+  }
+
+  /**
+   * Returns all eth transactions
+   */
+  async balance(address) {
+    const cached = await db.addresses.get(address)
+    if (cached) {
+      return cached.balance
+    }
+
+    let balance = await this.contract.balance(address)
+    balance = new BigNumber(balance).dividedBy(10 ** this.decimals).toFixed(0)
+
+    await db.addresses.create(address, balance)
+    return balance
   }
 }
 

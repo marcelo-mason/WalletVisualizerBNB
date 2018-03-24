@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const tx = require('./models/tx')
+const address = require('./models/address')
 
 class Db {
   constructor() {
@@ -11,8 +11,8 @@ class Db {
     })
   }
 
-  get txs() {
-    return tx
+  get addresses() {
+    return address
   }
 }
 

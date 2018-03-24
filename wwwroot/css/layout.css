@@ -1,5 +1,5 @@
 body {
-  background: #2d2d2d;
+  background: #282c34;
 }
 
 .node circle {
@@ -15,7 +15,7 @@ body {
 }
 
 .node.layer-0.selected circle {
-  fill: #076eb8;
+  fill: #1d1d1d;
   stroke: #4aa3e2;
   stroke-width: 5px;
 }
@@ -35,11 +35,6 @@ body {
   text-anchor: middle
 }
 
-.info {
-  fill: #1d1d1d;
-  cursor: pointer;
-}
-
 text {
   cursor: pointer;
   pointer-events: none;
@@ -53,7 +48,7 @@ text {
   stroke-width: 1px;
 }
 
-.link.top-level {
+.link.layer-1 {
   stroke: #4aa3e2;
   stroke-width: 2.5px;
 }
@@ -64,7 +59,7 @@ text {
 }
 
 .link-label {
-  //display: none;
-  font: 8px sans-serif;
+  display: none;
+  font: 4px sans-serif;
   fill: #8d8d8d;
 }
