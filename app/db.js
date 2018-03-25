@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const address = require('./models/address')
+const layer = require('./models/layer')
 
 class Db {
   constructor() {
@@ -11,8 +11,8 @@ class Db {
     })
   }
 
-  get addresses() {
-    return address
+  get layers() {
+    return layer
   }
 }
 

@@ -7,32 +7,32 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
   var tokenSymbol = 'ZIL';
   var emptySize = 3;
-  // let targetAddress = '0x28d804Bf2212E220BC2B7B6252993Db8286dF07f'
-  // let targetAddress = '0x91e65a0e5ff0f0e8fba65f3636a7cd74f4c9f0e2'
+  // let rootAddress = '0x28d804Bf2212E220BC2B7B6252993Db8286dF07f'
+  // let rootAddress = '0x91e65a0e5ff0f0e8fba65f3636a7cd74f4c9f0e2'
 
   /// ====================================
 
   var _window$location$path = window.location.pathname.split('/'),
       _window$location$path2 = _slicedToArray(_window$location$path, 4),
       controller = _window$location$path2[1],
-      targetAddress = _window$location$path2[2],
+      rootAddress = _window$location$path2[2],
       maxLayers = _window$location$path2[3];
 
-  if (controller.toLowerCase() === 'address' && targetAddress.length) {
-    console.log('* loading', targetAddress);
+  if (controller.toLowerCase() === 'address' && rootAddress.length) {
+    console.log('* loading', rootAddress);
 
     socket.on('layer', function (o) {
       console.log('* received layer', o);
-      parse(o.txs);
+      parse(o.txs, o.layer);
     });
 
     socket.emit('start', {
-      address: targetAddress,
+      address: rootAddress,
       maxLayers: maxLayers
     });
 
     /*
-    $.get(`/api/txs/${targetAddress}/${layers || 2}`, data => {
+    $.get(`/api/txs/${rootAddress}/${layers || 2}`, data => {
       console.log('* loaded', data)
       parse(data)
       update()
@@ -55,6 +55,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
   function parse() {
     var txs = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+    var layerNum = arguments[1];
 
     txs.forEach(function (node) {
       if (!nodes[node.to.toLowerCase()]) {

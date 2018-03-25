@@ -1,29 +1,29 @@
 ;(function($, _, d3, socket, Graph) {
   let tokenSymbol = 'ZIL'
   let emptySize = 3
-  // let targetAddress = '0x28d804Bf2212E220BC2B7B6252993Db8286dF07f'
-  // let targetAddress = '0x91e65a0e5ff0f0e8fba65f3636a7cd74f4c9f0e2'
+  // let rootAddress = '0x28d804Bf2212E220BC2B7B6252993Db8286dF07f'
+  // let rootAddress = '0x91e65a0e5ff0f0e8fba65f3636a7cd74f4c9f0e2'
 
   /// ====================================
 
-  let [, controller, targetAddress, maxLayers] = window.location.pathname.split(
+  let [, controller, rootAddress, maxLayers] = window.location.pathname.split(
     '/'
   )
-  if (controller.toLowerCase() === 'address' && targetAddress.length) {
-    console.log('* loading', targetAddress)
+  if (controller.toLowerCase() === 'address' && rootAddress.length) {
+    console.log('* loading', rootAddress)
 
     socket.on('layer', o => {
       console.log('* received layer', o)
-      parse(o.txs)
+      parse(o.txs, o.layer)
     })
 
     socket.emit('start', {
-      address: targetAddress,
+      address: rootAddress,
       maxLayers
     })
 
     /*
-    $.get(`/api/txs/${targetAddress}/${layers || 2}`, data => {
+    $.get(`/api/txs/${rootAddress}/${layers || 2}`, data => {
       console.log('* loaded', data)
       parse(data)
       update()
@@ -44,7 +44,7 @@
 
   let graph
 
-  function parse(txs = []) {
+  function parse(txs = [], layerNum) {
     txs.forEach(node => {
       if (!nodes[node.to.toLowerCase()]) {
         nodes[node.to.toLowerCase()] = node
