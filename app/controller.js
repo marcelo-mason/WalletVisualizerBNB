@@ -69,6 +69,7 @@ class Controller {
       return
     }
 
+    let countdown = currentLayer.length
     await async.eachLimit(currentLayer, 8, async node => {
       let balance
       let txs
@@ -94,11 +95,15 @@ class Controller {
             })
             const backwards = _.find(allPast, { to: child.to })
 
-            if (sameFromTo) {
-              sameFromTo.same = sameFromTo.same++ || 0
+            if (backwards) {
+              child.backwards = true
             }
 
-            if (!sameFromTo && !backwards && !sameSelf) {
+            if (sameFromTo) {
+              sameFromTo.same = sameFromTo.same++ || 1
+            }
+
+            if (!sameFromTo && !sameSelf) {
               nextLayer.push(child)
             }
           })
@@ -106,10 +111,12 @@ class Controller {
       }
 
       process.stdout.write(
-        `\n${currentLayerNum} ${node.id.slice(0, 12)} ${node.from.slice(
+        `\n${--countdown} ${currentLayerNum} ${node.id.slice(
           0,
-          5
-        )}-${node.to.slice(0, 5)} ${balance} ${txs ? txs.length : 'c'}tx`
+          12
+        )} ${node.from.slice(0, 5)}-${node.to.slice(0, 5)} ${balance} ${
+          txs ? txs.length : 'c'
+        }tx`
       )
     })
 

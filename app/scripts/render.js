@@ -44,27 +44,29 @@
 
   let graph
 
-  function parse(txs = [], layerNum) {
-    txs.forEach(node => {
+  function parse(layer = [], layerNum) {
+    layer.forEach(node => {
       if (!nodes[node.to.toLowerCase()]) {
         nodes[node.to.toLowerCase()] = node
       }
     })
 
-    txs.forEach((d, i) => {
-      d.size = Math.sqrt(d.balance) / 100 || emptySize
-      if (d.id === 'root') {
+    layer.forEach((node, i) => {
+      node.size = Math.sqrt(node.balance) / 100 || emptySize
+      if (node.id === 'root') {
         return
       }
-      const source = nodes[d.from.toLowerCase()]
-      const target = nodes[d.to.toLowerCase()]
+      const source = nodes[node.from.toLowerCase()]
+      const target = nodes[node.to.toLowerCase()]
       const exist = _.find(links, { source, target })
       if (!exist)
         links.push({
-          id: `link-${target.layer}-${i}`,
+          id: `link-${layerNum}-${i}`,
           source,
           target,
-          layer: target.layer
+          backwards: node.backwards,
+          same: node.same,
+          layer: layerNum
         })
     })
 
@@ -83,9 +85,8 @@
     .size([w, h - 160])
     .on('tick', tick)
     .gravity(0.1)
-    .charge(-200)
-    .charge(d => -d.size * 50)
-    .linkDistance(d => 25 + d.target.size / 2 + d.source.size / 2)
+    .charge(d => -d.size * 60)
+    .linkDistance(d => 20 + d.target.size + d.source.size)
 
   var drag = force
     .drag()
@@ -142,7 +143,7 @@
     link
       .enter()
       .append('svg:path')
-      .attr('class', d => 'link layer-' + d.layer)
+      .attr('class', d => `link layer-${d.layer} same-${d.same || 0}`)
       .attr('marker-end', 'url(#end)')
       .attr('x1', d => d.source.x)
       .attr('y1', d => d.source.y)
@@ -160,7 +161,7 @@
     node
       .enter()
       .append('g')
-      .attr('class', d => 'node layer-' + d.layer)
+      .attr('class', d => `node layer-${d.layer}`)
       .on('mouseover', selectNode)
       .call(drag)
 

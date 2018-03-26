@@ -54,28 +54,30 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
   var graph = void 0;
 
   function parse() {
-    var txs = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+    var layer = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
     var layerNum = arguments[1];
 
-    txs.forEach(function (node) {
+    layer.forEach(function (node) {
       if (!nodes[node.to.toLowerCase()]) {
         nodes[node.to.toLowerCase()] = node;
       }
     });
 
-    txs.forEach(function (d, i) {
-      d.size = Math.sqrt(d.balance) / 100 || emptySize;
-      if (d.id === 'root') {
+    layer.forEach(function (node, i) {
+      node.size = Math.sqrt(node.balance) / 100 || emptySize;
+      if (node.id === 'root') {
         return;
       }
-      var source = nodes[d.from.toLowerCase()];
-      var target = nodes[d.to.toLowerCase()];
+      var source = nodes[node.from.toLowerCase()];
+      var target = nodes[node.to.toLowerCase()];
       var exist = _.find(links, { source: source, target: target });
       if (!exist) links.push({
-        id: 'link-' + target.layer + '-' + i,
+        id: 'link-' + layerNum + '-' + i,
         source: source,
         target: target,
-        layer: target.layer
+        backwards: node.backwards,
+        same: node.same,
+        layer: layerNum
       });
     });
 
@@ -89,10 +91,10 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     update();
   }
 
-  var force = d3.layout.force().size([w, h - 160]).on('tick', tick).gravity(0.1).charge(-200).charge(function (d) {
-    return -d.size * 50;
+  var force = d3.layout.force().size([w, h - 160]).on('tick', tick).gravity(0.1).charge(function (d) {
+    return -d.size * 60;
   }).linkDistance(function (d) {
-    return 25 + d.target.size / 2 + d.source.size / 2;
+    return 20 + d.target.size + d.source.size;
   });
 
   var drag = force.drag().origin(function (d) {
@@ -128,7 +130,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
     // enter links
     link.enter().append('svg:path').attr('class', function (d) {
-      return 'link layer-' + d.layer;
+      return 'link layer-' + d.layer + ' same-' + (d.same || 0);
     }).attr('marker-end', 'url(#end)').attr('x1', function (d) {
       return d.source.x;
     }).attr('y1', function (d) {

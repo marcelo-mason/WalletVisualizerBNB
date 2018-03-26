@@ -3,7 +3,7 @@ body {
 }
 
 .node circle {
-  stroke: #2d2d2d;
+  stroke: #282c34;
   fill: #fff;
   stroke-width: 0.5px;
 }
@@ -22,7 +22,6 @@ body {
 
 .node.layer-1 circle {
   fill: #4aa3e2;
-  stroke-width: 0;
 }
 
 .node.selected circle {
@@ -62,4 +61,13 @@ text {
   display: none;
   font: 4px sans-serif;
   fill: #8d8d8d;
+}
+
+.same-1,
+.same-2,
+.same-3,
+.same-4,
+.same-5{  
+  stroke: #fff;
+  stroke-width: 2.5px;
 }
