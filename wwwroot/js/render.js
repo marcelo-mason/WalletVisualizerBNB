@@ -165,7 +165,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     // enter node
     node.enter().append('g').attr('class', function (d) {
       return 'node layer-' + d.layer + ' ' + (d.user ? 'user' : '');
-    }).on('mouseover', selectNode).call(drag);
+    }).on('mouseover', selectNode).on('contextmenu', openEtherscan).call(drag);
 
     node.selectAll('*').remove();
 
@@ -177,11 +177,11 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     // add balance text
     node.append('text').attr('class', 'text hid').attr('x', 0).attr('y', 3).text(function (d) {
       return formatTokenNumber(d.balance, tokenSymbol);
-    }).on('click', openEtherscan);
+    });
 
     node.append('text').attr('class', 'text-small hid').attr('x', 0).attr('y', 14).text(function (d) {
       return d.user;
-    }).on('click', openEtherscan);
+    });
 
     // remove exit
     node.exit().remove();
@@ -230,6 +230,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
   }
 
   function openEtherscan(d) {
+    d3.event.preventDefault();
     window.open('https://etherscan.io/tx/' + d.tx + '#tokentxns');
   }
 
@@ -279,18 +280,6 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       });
 
       descendants.classed('selected', true).moveToFront().transition().duration(400);
-
-      var infos = d3.select('.info-panel').selectAll('div').data(descendants.data());
-
-      infos.enter().append('div').text(function (d) {
-        if (d.user) {
-          return d.address + ' (' + d.user + ')';
-        }
-        return d.address;
-      });
-      console.log('path', descendants.data().map(function (x) {
-        return x.address;
-      }));
 
       // unhide balances
       descendants.selectAll('.hid').style('display', 'inherit');

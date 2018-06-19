@@ -184,6 +184,7 @@
       .append('g')
       .attr('class', d => `node layer-${d.layer} ${d.user ? 'user' : ''}`)
       .on('mouseover', selectNode)
+      .on('contextmenu', openEtherscan)
       .call(drag)
 
     node.selectAll('*').remove()
@@ -198,7 +199,6 @@
       .attr('x', 0)
       .attr('y', 3)
       .text(d => formatTokenNumber(d.balance, tokenSymbol))
-      .on('click', openEtherscan)
 
     node
       .append('text')
@@ -206,7 +206,6 @@
       .attr('x', 0)
       .attr('y', 14)
       .text(d => d.user)
-      .on('click', openEtherscan)
 
     // remove exit
     node.exit().remove()
@@ -260,6 +259,7 @@
   }
 
   function openEtherscan(d) {
+    d3.event.preventDefault()
     window.open(`https://etherscan.io/tx/${d.tx}#tokentxns`)
   }
 
@@ -327,22 +327,6 @@
         .moveToFront()
         .transition()
         .duration(400)
-
-      const infos = d3
-        .select('.info-panel')
-        .selectAll('div')
-        .data(descendants.data())
-
-      infos
-        .enter()
-        .append('div')
-        .text(function(d) {
-          if (d.user) {
-            return `${d.address} (${d.user})`
-          }
-          return d.address
-        })
-      console.log('path', descendants.data().map(x => x.address))
 
       // unhide balances
       descendants.selectAll('.hid').style('display', 'inherit')
