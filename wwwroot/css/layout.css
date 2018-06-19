@@ -20,6 +20,10 @@ body {
   stroke-width: 5px;
 }
 
+.node.user circle{
+  fill: #8c4ae2;
+}
+
 .node.layer-1 circle {
   fill: #4aa3e2;
 }
@@ -41,10 +45,18 @@ text {
   fill: #fff;
 }
 
+.text-small {
+  font: 8px sans-serif;
+}
+
 .link {
   fill: none;
   stroke: #434956;
   stroke-width: 1px;
+}
+
+.link.user{
+  stroke: #61418c;
 }
 
 .link.layer-1 {
@@ -63,11 +75,18 @@ text {
   fill: #8d8d8d;
 }
 
-.same-1,
-.same-2,
-.same-3,
-.same-4,
-.same-5{  
-  stroke: #fff;
+.same-1{  
   stroke-width: 2.5px;
+}
+.same-2{  
+  stroke-width: 3px;
+}
+.same-3{  
+  stroke-width: 3.5px;
+}
+.same-4{  
+  stroke-width: 4px;
+}
+.same-5{  
+  stroke-width: 4.5px;
 }

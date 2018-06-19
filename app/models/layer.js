@@ -41,4 +41,4 @@ schema.statics.has = async function(address, layer, cb) {
   return this.find({ address, layer }).count(cb) > 0
 }
 
-module.exports = mongoose.model('Address', schema)
+module.exports = mongoose.model('Layer', schema)

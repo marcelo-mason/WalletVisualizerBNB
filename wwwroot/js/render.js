@@ -141,7 +141,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
     // enter links
     link.enter().append('svg:path').attr('class', function (d) {
-      return 'link layer-' + d.layer + ' same-' + (d.same || 0);
+      return 'link layer-' + d.layer + ' same-' + (d.same || 0) + ' ' + (d.target.user ? 'user' : '');
     }).attr('marker-end', 'url(#end)').attr('x1', function (d) {
       return d.source.x;
     }).attr('y1', function (d) {
@@ -164,7 +164,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
     // enter node
     node.enter().append('g').attr('class', function (d) {
-      return 'node layer-' + d.layer;
+      return 'node layer-' + d.layer + ' ' + (d.user ? 'user' : '');
     }).on('mouseover', selectNode).call(drag);
 
     node.selectAll('*').remove();
@@ -177,6 +177,10 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     // add balance text
     node.append('text').attr('class', 'text hid').attr('x', 0).attr('y', 3).text(function (d) {
       return formatTokenNumber(d.balance, tokenSymbol);
+    }).on('click', openEtherscan);
+
+    node.append('text').attr('class', 'text-small hid').attr('x', 0).attr('y', 14).text(function (d) {
+      return d.user;
     }).on('click', openEtherscan);
 
     // remove exit
@@ -279,6 +283,9 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       var infos = d3.select('.info-panel').selectAll('div').data(descendants.data());
 
       infos.enter().append('div').text(function (d) {
+        if (d.user) {
+          return d.address + ' (' + d.user + ')';
+        }
         return d.address;
       });
       console.log('path', descendants.data().map(function (x) {

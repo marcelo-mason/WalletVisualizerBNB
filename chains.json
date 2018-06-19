@@ -1,0 +1,47 @@
+[
+  {
+    "name": "ethereum",
+    "label": "Ethereum",
+    "coin": "ETH",
+    "addrUrl": "https://etherscan.io/address/",
+    "txUrl": "https://etherscan.io/tx/",
+    "placeholder": "0x1234000000000000000000000000000000000000",
+    "usingTxForSend": false
+  },  
+  {
+    "name": "neo",
+    "label": "Neo",
+    "coin": "NEO",
+    "addrUrl": "https://neotracker.io/address/",
+    "txUrl": "https://neotracker.io/tx/",
+    "placeholder": "Axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "usingTxForSend": false
+  },
+   {
+    "name": "wanchain",
+    "label": "Wanchain",
+    "coin": "WAN",
+    "addrUrl": "https://explorer.wanchain.org/block/addr/",
+    "txUrl": "https://explorer.wanchain.org/block/trans/",
+    "placeholder": "0x1234000000000000000000000000000000000000",
+    "usingTxForSend": false
+  },
+  {
+    "name": "icon",
+    "label": "ICON",
+    "coin": "ICX",
+    "addrUrl": "https://tracker.icon.foundation/address/",
+    "txUrl": "https://tracker.icon.foundation/transaction/",
+    "placeholder": "hx1234000000000000000000000000000000000000",
+    "usingTxForSend": false
+  },
+  {
+    "name": "bitcoin",
+    "label": "Bitcoin",
+    "coin": "BTC",
+    "addrUrl": "https://blockchain.info/address/",
+    "txUrl": "https://blockchain.info/tx/",
+    "placeholder": "0000000000000000000000000000000000000000000000000000000000000000",
+    "usingTxForSend": true
+  }
+]

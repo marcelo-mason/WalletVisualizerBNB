@@ -158,7 +158,13 @@
     link
       .enter()
       .append('svg:path')
-      .attr('class', d => `link layer-${d.layer} same-${d.same || 0}`)
+      .attr(
+        'class',
+        d =>
+          `link layer-${d.layer} same-${d.same || 0} ${
+            d.target.user ? 'user' : ''
+          }`
+      )
       .attr('marker-end', 'url(#end)')
       .attr('x1', d => d.source.x)
       .attr('y1', d => d.source.y)
@@ -176,7 +182,7 @@
     node
       .enter()
       .append('g')
-      .attr('class', d => `node layer-${d.layer}`)
+      .attr('class', d => `node layer-${d.layer} ${d.user ? 'user' : ''}`)
       .on('mouseover', selectNode)
       .call(drag)
 
@@ -192,6 +198,14 @@
       .attr('x', 0)
       .attr('y', 3)
       .text(d => formatTokenNumber(d.balance, tokenSymbol))
+      .on('click', openEtherscan)
+
+    node
+      .append('text')
+      .attr('class', 'text-small hid')
+      .attr('x', 0)
+      .attr('y', 14)
+      .text(d => d.user)
       .on('click', openEtherscan)
 
     // remove exit
@@ -323,6 +337,9 @@
         .enter()
         .append('div')
         .text(function(d) {
+          if (d.user) {
+            return `${d.address} (${d.user})`
+          }
           return d.address
         })
       console.log('path', descendants.data().map(x => x.address))

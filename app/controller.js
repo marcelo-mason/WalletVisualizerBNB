@@ -95,7 +95,7 @@ class Controller {
       if (!nextCached) {
         txs = await this.getTxs(node.address, node)
         if (txs) {
-          txs.forEach(child => {
+          await async.each(txs, async child => {
             const sameSelf = child.from === child.to
             const sameFromTo = _.find(nextLayer, {
               from: child.from,
@@ -112,6 +112,14 @@ class Controller {
             }
 
             if (!sameFromTo && !sameSelf) {
+              child.user = null
+              const found = await db.addresses.get(child.address)
+              if (found) {
+                const user = await db.users.get(found.userId)
+                if (user) {
+                  child.user = user.displayname
+                }
+              }
               nextLayer.push(child)
             }
           })
