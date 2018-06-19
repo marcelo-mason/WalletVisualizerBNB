@@ -5,21 +5,30 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 ;(function ($, _, d3, socket, Graph) {
   var _this = this;
 
-  var tokenSymbol = 'ZIL';
   var emptySize = 3;
+  var tokenSymbol = '';
   // let rootAddress = '0x28d804Bf2212E220BC2B7B6252993Db8286dF07f'
   // let rootAddress = '0x91e65a0e5ff0f0e8fba65f3636a7cd74f4c9f0e2'
 
   /// ====================================
 
+  console.log('* rendering');
+
   var _window$location$path = window.location.pathname.split('/'),
-      _window$location$path2 = _slicedToArray(_window$location$path, 4),
+      _window$location$path2 = _slicedToArray(_window$location$path, 7),
       controller = _window$location$path2[1],
       rootAddress = _window$location$path2[2],
-      maxLayers = _window$location$path2[3];
+      maxLayers = _window$location$path2[3],
+      symbol = _window$location$path2[4],
+      tokenAddress = _window$location$path2[5],
+      decimals = _window$location$path2[6];
 
-  if (controller.toLowerCase() === 'address' && rootAddress.length) {
+  console.log(window.location.pathname.split('/'));
+
+  if (controller.toLowerCase() === 'start') {
     console.log('* loading', rootAddress);
+
+    tokenSymbol = symbol;
 
     socket.on('layer', function (o) {
       console.log('* received layer', o);
@@ -28,7 +37,9 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
     socket.emit('start', {
       address: rootAddress,
-      maxLayers: maxLayers
+      maxLayers: maxLayers,
+      tokenAddress: tokenAddress,
+      decimals: decimals
     });
 
     /*

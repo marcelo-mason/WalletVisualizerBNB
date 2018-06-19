@@ -1,16 +1,29 @@
 ;(function($, _, d3, socket, Graph) {
-  let tokenSymbol = 'ZIL'
   let emptySize = 3
+  let tokenSymbol = ''
   // let rootAddress = '0x28d804Bf2212E220BC2B7B6252993Db8286dF07f'
   // let rootAddress = '0x91e65a0e5ff0f0e8fba65f3636a7cd74f4c9f0e2'
 
   /// ====================================
 
-  let [, controller, rootAddress, maxLayers] = window.location.pathname.split(
-    '/'
-  )
-  if (controller.toLowerCase() === 'address' && rootAddress.length) {
+  console.log('* rendering')
+
+  let [
+    ,
+    controller,
+    rootAddress,
+    maxLayers,
+    symbol,
+    tokenAddress,
+    decimals
+  ] = window.location.pathname.split('/')
+
+  console.log(window.location.pathname.split('/'))
+
+  if (controller.toLowerCase() === 'start') {
     console.log('* loading', rootAddress)
+
+    tokenSymbol = symbol
 
     socket.on('layer', o => {
       console.log('* received layer', o)
@@ -19,7 +32,9 @@
 
     socket.emit('start', {
       address: rootAddress,
-      maxLayers
+      maxLayers,
+      tokenAddress,
+      decimals
     })
 
     /*

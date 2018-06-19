@@ -2,12 +2,9 @@ const Contract = require('./contract')
 const BigNumber = require('bignumber.js')
 
 class Data {
-  constructor() {
-    this.decimals = 12
-    this.contract = new Contract(
-      '0x05f4a42e251f2d52b8ed15e9fedaacfcef1fad27',
-      this.decimals
-    )
+  constructor(decimals, tokenAddress) {
+    this.decimals = decimals
+    this.contract = new Contract(tokenAddress, this.decimals)
   }
 
   /**
@@ -52,4 +49,4 @@ class Data {
   }
 }
 
-module.exports = new Data()
+module.exports = Data

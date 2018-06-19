@@ -31,10 +31,10 @@ body {
 
 .hid {
   display: none;
-  text-anchor: middle
 }
 
 text {
+  text-anchor: middle;
   cursor: pointer;
   pointer-events: none;
   font: 10px sans-serif;

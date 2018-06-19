@@ -13,9 +13,11 @@ app.use(bodyParser.json())
 app.use(express.static(join(__dirname, '../wwwroot')))
 
 // api
-app.route('/address/:address/:layers?').get((req, res) => {
-  res.sendFile(join(__dirname, '../wwwroot/index.html'))
-})
+app
+  .route('/start/:address/:layers/:tokenSymbol/:tokenAddress/:decimals')
+  .get((req, res) => {
+    res.sendFile(join(__dirname, '../wwwroot/index.html'))
+  })
 app.route('/').get((req, res) => {
   res.send('hello')
 })
@@ -38,3 +40,9 @@ io.on('connection', socket => {
   console.log('Socket connected', socket.id)
   new Controller(socket).init()
 })
+
+/*
+
+http://localhost:3000/start/0x1fa2e3f271b7a6f9242d7f5ee9121948f6cfa7ff/3/FMF/0xb4d0fdfc8497aef97d3c2892ae682ee06064a2bc/18
+
+*/

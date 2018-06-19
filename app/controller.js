@@ -1,4 +1,4 @@
-const data = require('./data')
+const Data = require('./data')
 const async = require('awaitable-async')
 const _ = require('lodash')
 const db = require('./db')
@@ -6,21 +6,29 @@ const db = require('./db')
 class Controller {
   constructor(socket) {
     this.socket = socket
+    this.data = null
   }
 
   async init() {
     // init listeners
     this.socket.on('start', (o, m) => {
-      this.start(o.address, o.maxLayers)
+      this.start(
+        o.address,
+        parseInt(o.maxLayers),
+        o.tokenSymbol,
+        o.tokenAddress,
+        parseInt(o.decimals)
+      )
     })
   }
 
-  async start(address, maxLayers = 2) {
+  async start(address, maxLayers, tokenSymbol, tokenAddress, decimals) {
     let layers = []
 
     console.log(`* Starting ${address} ${maxLayers}`)
     // init root and first layer
-    let balance = await data.balance(address)
+    this.data = new Data(decimals, tokenAddress)
+    let balance = await this.data.balance(address)
     layers.push([
       {
         id: 'root',
@@ -75,7 +83,7 @@ class Controller {
       let txs
 
       if (!('balance' in node)) {
-        balance = await data.balance(node.address, node)
+        balance = await this.data.balance(node.address, node)
         if (balance) {
           node.layer = currentLayerNum
           node.balance = balance
@@ -133,7 +141,7 @@ class Controller {
     const parentTx = isRoot ? 'root' : node.id
     const parentBlock = isRoot ? null : node.block
 
-    let txs = await data.txs(address)
+    let txs = await this.data.txs(address)
     if (txs) {
       if (!isRoot) {
         txs = txs.filter(x => x.block >= parentBlock)
