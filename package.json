@@ -23,7 +23,7 @@
     "etherscan-api": "^4.0.0",
     "express": "^4.16.2",
     "lodash": "^4.17.4",
-    "mongoose": "^4.13.6",
+    "mongoose": "^4.13.21",
     "patch-package": "^5.0.0",
     "path": "^0.12.7",
     "request-promise": "^4.2.2",
